@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ listing.title }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+            <img id="main-image" src="{{ listing.images[0].image_url if listing.images else 'https://via.placeholder.com/600x400?text=Sin+Imagen' }}" alt="Imagen de {{ listing.title }}" onerror="this.src='https://via.placeholder.com/600x400?text=Sin+Imagen'" class="w-full h-96 object-cover">
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold mb-4">Descripción</h2>
+            <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ listing.description }}</p>
+        </div>
+    </div>
+    
+    <div class="space-y-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h1 class="text-2xl font-bold mb-2">{{ listing.title }}</h1>
+            <p class="text-3xl font-bold text-blue-600 mb-6">${{ listing.price }}</p>
+            <div class="flex items-center gap-2 text-gray-600 mb-6"><span class="material-icons-round">location_on</span><span>{{ listing.district }}, {{ listing.province }}</span></div>
+            {% if current_user.is_authenticated and current_user.id != listing.user_id %}
+            <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-3 rounded-xl font-bold mb-3 hover:bg-blue-700"><span class="material-icons-round">chat</span> Chatear</a>
+            <button onclick="document.getElementById('report-modal').classList.remove('hidden')" class="flex items-center justify-center gap-2 w-full border-2 border-red-500/20 text-red-500 py-3 rounded-xl font-bold hover:bg-red-50"><span class="material-icons-round">report</span> Reportar</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
+        <h2 class="text-xl font-bold mb-4 text-black">Reportar Anuncio</h2>
+        <form id="report-form" class="space-y-4">
+            <select name="report_type" aria-label="Motivo del reporte" title="Motivo del reporte" class="w-full p-3 border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-red-500">
+                <option value="FakePrice">Precio Falso / Engañoso</option>
+                <option value="SuspiciousSeller">Vendedor Sospechoso</option>
+                <option value="IllegalContent">Contenido Inapropiado</option>
+            </select>
+            <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700">Enviar Reporte</button>
+            <button type="button" onclick="document.getElementById('report-modal').classList.add('hidden')" class="w-full py-2 text-gray-500 hover:text-gray-800 font-bold">Cancelar</button>
+        </form>
+    </div>
+</div>
+<script>
+document.getElementById('report-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {listing_id: {{ listing.id }}, report_type: e.target.report_type.value};
+    const res = await fetch('{{ url_for("reports.create") }}', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    const result = await res.json();
+    alert(result.message || result.error);
+    document.getElementById('report-modal').classList.add('hidden');
+});
+</script>
+{% endblock %}

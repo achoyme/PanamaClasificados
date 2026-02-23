@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Explorar Anuncios</h1>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    {% for listing in listings %}
+    <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden block">
+        <img src="{{ listing.images[0].image_url if listing.images else '/static/images/placeholder.png' }}" class="w-full h-48 object-cover">
+        <div class="p-4">
+            <h3 class="font-bold truncate">{{ listing.title }}</h3>
+            <p class="text-blue-600 font-bold">${{ listing.price }}</p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

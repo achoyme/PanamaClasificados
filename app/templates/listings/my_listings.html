@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Mis Anuncios{% endblock %}
+{% block content %}
+<div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-200 pb-4 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-amazon-base">Mis Publicaciones</h1>
+            <p class="text-sm text-gray-600 mt-1">Gestiona, edita o republica tus artículos.</p>
+        </div>
+        <a href="{{ url_for('listings.create') }}" class="bg-amazon-accent hover:bg-amazon-hover text-amazon-base px-6 py-2.5 rounded font-bold shadow-sm transition-colors flex items-center gap-2">
+            <span class="material-icons-round text-sm">add</span> Nuevo Anuncio
+        </a>
+    </div>
+
+    {% if listings %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mb-12">
+        {% for listing in listings %}
+        <div class="bg-white rounded-lg shadow-sm flex flex-col h-full relative overflow-hidden
+            {% if listing.tier == 'Premium' %} border-2 border-amazon-accent 
+            {% elif listing.tier == 'Profesional' %} border-2 border-amazon-light 
+            {% else %} border border-gray-200 {% endif %}">
+            
+            {% if listing.tier == 'Premium' %}
+            <div class="absolute top-0 left-0 bg-amazon-accent text-amazon-base text-[10px] md:text-xs font-black px-3 py-1 rounded-br-lg z-10 shadow-sm flex items-center gap-1">
+                <span class="material-icons-round text-[12px]">star</span> DESTACADO
+            </div>
+            {% elif listing.tier == 'Profesional' %}
+            <div class="absolute top-0 left-0 bg-amazon-light text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-br-lg z-10 shadow-sm">
+                RECOMENDADO
+            </div>
+            {% endif %}
+
+            <div class="relative w-full aspect-square bg-[#eaeded] flex items-center justify-center p-4">
+                <img src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/400x400?text=Sin+Imagen' }}" alt="Foto de {{ listing.title }}" onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=Sin+Imagen';" class="absolute inset-0 w-full h-full object-contain mix-blend-multiply p-3">
+            </div>
+            
+            <div class="p-4 flex flex-col flex-1">
+                <h3 class="text-sm md:text-base text-gray-900 font-medium line-clamp-2 leading-snug mb-1">{{ listing.title }}</h3>
+                <p class="text-xl font-black text-gray-900 mb-3">${{ listing.price }}</p>
+
+                <div class="mt-auto">
+                    {% if listing.expires_at and listing.expires_at < now %}
+                        <div class="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 p-2 rounded border border-red-200">
+                            <span class="material-icons-round text-[14px]">error_outline</span> Expirado (Desactivado)
+                        </div>
+                    {% else %}
+                        <div class="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                            <span class="material-icons-round text-[14px]">check_circle</span> Vence: {{ listing.expires_at.strftime('%d-%m-%Y') if listing.expires_at else 'N/A' }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="text-center text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 py-2 rounded transition-colors">Ver</a>
+                    <a href="{{ url_for('listings.edit', listing_id=listing.id) }}" class="text-center text-xs font-bold text-amazon-base bg-amazon-accent hover:bg-amazon-hover py-2 rounded transition-colors">
+                        {% if listing.expires_at and listing.expires_at < now %}Republicar{% else %}Editar{% endif %}
+                    </a>
+                    <form method="POST" action="{{ url_for('listings.delete', listing_id=listing.id) }}" class="col-span-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="w-full text-center text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded transition-colors" onclick="return confirm('¿Seguro que deseas eliminar definitivamente este anuncio?')">Eliminar Anuncio</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200 mb-12">
+        <span class="material-icons-round text-6xl text-gray-300 mb-4 block">inventory_2</span>
+        <p class="text-xl text-amazon-base font-bold">No tienes publicaciones activas.</p>
+        <a href="{{ url_for('listings.create') }}" class="mt-4 inline-block bg-amazon-accent hover:bg-amazon-hover text-amazon-base px-8 py-3 rounded font-bold transition-colors">Vender un artículo</a>
+    </div>
+    {% endif %}
+
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 md:p-8 mt-10 shadow-inner">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-amazon-base flex items-center gap-2 mb-2">
+                    <span class="material-icons-round text-blue-600">manage_accounts</span>
+                    Privacidad y Estadísticas de Archivos
+                </h3>
+                <p class="text-sm text-gray-600 leading-relaxed max-w-3xl">
+                    De acuerdo con la <a href="{{ url_for('main.privacy') }}" class="text-blue-600 underline">Política de Privacidad (Punto 11)</a>, tienes derecho a acceder, transferir o solicitar la eliminación de tu información personal. Utiliza nuestra herramienta automatizada para extraer tus datos en formato estructurado (JSON).
+                </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <a href="{{ url_for('main.export_data') }}" class="flex-1 sm:flex-none text-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded font-bold transition-colors shadow-sm flex items-center justify-center gap-2 text-sm">
+                    <span class="material-icons-round text-base">download</span> Exportar mis datos
+                </a>
+                <a href="mailto:soporte@panamaclassifieds.com?subject=Solicitud de Eliminación de Cuenta" class="flex-1 sm:flex-none text-center bg-white hover:bg-gray-100 text-red-600 border border-red-200 px-5 py-2.5 rounded font-bold transition-colors text-sm">
+                    Eliminar cuenta
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Explorar Anuncios{% endblock %}
+{% block content %}
+<div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <div class="mb-6 border-b border-gray-200 pb-4">
+        <h1 class="text-2xl md:text-3xl font-bold text-[#131921]">Explorar Anuncios</h1>
+        <p class="text-sm text-gray-600 mt-1">Encuentra los mejores artículos en todo Panamá</p>
+    </div>
+    
+    <div class="flex flex-col lg:flex-row gap-8">
+        <aside class="w-full lg:w-64 flex-shrink-0">
+            <form method="GET" action="{{ url_for('listings.index') }}" class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm sticky top-24">
+                <h2 class="font-bold text-[#131921] mb-4 text-lg border-b border-gray-100 pb-2">Filtros de búsqueda</h2>
+                
+                <div class="mb-4">
+                    <label for="search" class="block text-sm font-bold text-gray-700 mb-1">Palabra clave</label>
+                    <input type="text" id="search" name="search" value="{{ filters.search_term or '' }}" placeholder="Ej. Celular, Auto..." title="Buscar palabras clave" aria-label="Buscar palabras clave" class="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-[#febd69] focus:border-transparent outline-none">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="category_id" class="block text-sm font-bold text-gray-700 mb-1">Categoría</label>
+                    <select name="category_id" id="category_id" title="Filtrar por categoría" aria-label="Filtrar por categoría" class="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-[#febd69] focus:border-transparent outline-none bg-white">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if filters.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="province" class="block text-sm font-bold text-gray-700 mb-1">Provincia</label>
+                    <select name="province" id="province" title="Filtrar por provincia" aria-label="Filtrar por provincia" class="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-[#febd69] focus:border-transparent outline-none bg-white">
+                        <option value="">Todo Panamá</option>
+                        <option value="Panamá" {% if filters.province == 'Panamá' %}selected{% endif %}>Panamá</option>
+                        <option value="Panamá Oeste" {% if filters.province == 'Panamá Oeste' %}selected{% endif %}>Panamá Oeste</option>
+                        <option value="Chiriquí" {% if filters.province == 'Chiriquí' %}selected{% endif %}>Chiriquí</option>
+                        <option value="Colón" {% if filters.province == 'Colón' %}selected{% endif %}>Colón</option>
+                        <option value="Coclé" {% if filters.province == 'Coclé' %}selected{% endif %}>Coclé</option>
+                        <option value="Veraguas" {% if filters.province == 'Veraguas' %}selected{% endif %}>Veraguas</option>
+                        <option value="Herrera" {% if filters.province == 'Herrera' %}selected{% endif %}>Herrera</option>
+                        <option value="Los Santos" {% if filters.province == 'Los Santos' %}selected{% endif %}>Los Santos</option>
+                        <option value="Bocas del Toro" {% if filters.province == 'Bocas del Toro' %}selected{% endif %}>Bocas del Toro</option>
+                        <option value="Darién" {% if filters.province == 'Darién' %}selected{% endif %}>Darién</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label for="district" class="block text-sm font-bold text-gray-700 mb-1">Zona / Distrito</label>
+                    <input type="text" id="district" name="district" value="{{ filters.district or '' }}" placeholder="Ej. San Miguelito" title="Filtrar por zona o distrito" aria-label="Filtrar por zona o distrito" class="w-full px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-[#febd69] focus:border-transparent outline-none">
+                </div>
+
+                <button type="submit" class="w-full bg-[#febd69] hover:bg-[#f3a847] text-[#131921] px-4 py-2.5 rounded shadow-sm font-bold transition-colors flex items-center justify-center gap-2">
+                    <span class="material-icons-round text-sm">search</span> Aplicar Filtros
+                </button>
+                
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('listings.index') }}" class="text-sm text-blue-600 hover:text-[#f3a847] hover:underline">Limpiar búsqueda</a>
+                </div>
+            </form>
+        </aside>
+
+        <div class="flex-1">
+            {% if listings %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
+                {% for listing in listings %}
+                <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group relative overflow-hidden
+                    {% if listing.tier == 'Premium' %} border-2 border-[#febd69] 
+                    {% elif listing.tier == 'Profesional' %} border-2 border-[#232f3e] 
+                    {% else %} border border-gray-200 {% endif %}">
+                    
+                    {% if listing.tier == 'Premium' %}
+                    <div class="absolute top-0 left-0 bg-[#febd69] text-[#131921] text-[10px] md:text-xs font-black px-3 py-1.5 rounded-br-lg z-10 shadow-sm flex items-center gap-1">
+                        <span class="material-icons-round text-[12px]">star</span> DESTACADO
+                    </div>
+                    {% elif listing.tier == 'Profesional' %}
+                    <div class="absolute top-0 left-0 bg-[#232f3e] text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-br-lg z-10 shadow-sm">
+                        RECOMENDADO
+                    </div>
+                    {% endif %}
+
+                    <div class="relative w-full aspect-square bg-[#eaeded] flex items-center justify-center p-4">
+                        <img src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/400x400?text=Sin+Imagen' }}" alt="Foto del anuncio: {{ listing.title }}" title="Foto del anuncio: {{ listing.title }}" aria-label="Foto de {{ listing.title }}" onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=Sin+Imagen';" class="absolute inset-0 w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300 p-2">
+                    </div>
+                    
+                    <div class="p-4 flex flex-col flex-1">
+                        <h3 class="font-medium text-[#131921] line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors leading-snug">{{ listing.title }}</h3>
+                        
+                        <div class="text-xs text-gray-500 mb-2 capitalize">{{ listing.condition if listing.condition else 'Usado' }}</div>
+                        
+                        <div class="mt-auto">
+                            <p class="text-2xl font-bold text-[#131921]">${{ listing.price }}</p>
+                            {% if listing.is_negotiable %}
+                            <p class="text-[11px] text-gray-500 line-through">O mejor oferta</p>
+                            {% endif %}
+                            
+                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                <span class="material-icons-round text-[14px]">place</span> {{ listing.district }}, {{ listing.province }}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
+                <span class="material-icons-round text-6xl text-gray-300 mb-4 block">search_off</span>
+                <p class="text-xl text-[#131921] font-bold">No encontramos clasificados con esos filtros.</p>
+                <p class="text-gray-500 mt-2 mb-4">Prueba buscando con otras palabras clave o cambia la provincia.</p>
+                <a href="{{ url_for('listings.index') }}" class="inline-block bg-[#232f3e] hover:bg-[#131921] text-white px-6 py-2.5 rounded font-bold transition-colors">Limpiar búsqueda</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

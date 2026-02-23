@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<div class="text-center py-12 mb-8 bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+    <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl sm:tracking-tight lg:text-6xl">
+        Mercado Libre de <span class="text-blue-600">Panamá</span>
+    </h1>
+    <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500 dark:text-gray-400">
+        Compra y vende lo que quieras de forma rápida, impulsado por IA.
+    </p>
+    <div class="mt-8 flex justify-center gap-4">
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('listings.create') }}" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 hover:scale-105 transition-transform">Publicar Anuncio</a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 hover:scale-105 transition-transform">Vender Ahora</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Últimos Anuncios</h2>
+        <a href="{{ url_for('listings.index') }}" class="text-blue-600 font-semibold hover:underline">Ver todos →</a>
+    </div>
+
+    {% if listings %}
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for listing in listings %}
+        <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700 block group">
+            <div class="relative h-48 overflow-hidden">
+                <img src="{{ listing.images[0].image_url if listing.images else 'https://via.placeholder.com/400x300?text=Sin+Imagen' }}" 
+                     alt="Imagen de {{ listing.title }}"
+                     onerror="this.src='https://via.placeholder.com/400x300?text=Sin+Imagen'"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            </div>
+            <div class="p-4">
+                <h3 class="font-bold text-lg mb-1 truncate text-gray-800 dark:text-white">{{ listing.title }}</h3>
+                <p class="text-blue-600 font-extrabold text-xl mb-2">${{ listing.price }}</p>
+                <div class="text-xs text-gray-500">{{ listing.province }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-500 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <span class="material-icons-round text-6xl mb-3 text-gray-300">inventory_2</span>
+        <p class="font-bold">Aún no hay anuncios públicos. ¡Sé el primero en publicar!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

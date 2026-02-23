@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Revisar Reporte{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <a href="{{ url_for('reports.moderation') }}" class="text-blue-600 hover:underline mb-6 inline-block font-bold">← Volver al Panel</a>
+    <h1 class="text-3xl font-bold mb-8">Revisar Reporte #{{ report.id }}</h1>
+    
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-black">
+        <form method="POST" action="{{ url_for('reports.review', report_id=report.id) }}" class="space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label for="action_taken" class="block text-sm font-bold text-gray-700 mb-2">Decisión a tomar:</label>
+                <select id="action_taken" name="action_taken" required title="Seleccionar acción" aria-label="Acción a tomar" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Elige una acción --</option>
+                    <option value="ListingRemoved">Eliminar Anuncio Definitivamente</option>
+                    <option value="NoAction">No hacer nada (Falsa Alarma)</option>
+                    <option value="UserBanned">Suspender Usuario</option>
+                </select>
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-bold text-gray-700 mb-2">Estado final del reporte:</label>
+                <select id="status" name="status" required title="Estado del reporte" aria-label="Estado del reporte" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    <option value="Resolved">Marcar como Resuelto</option>
+                    <option value="Dismissed">Descartar Reporte (Inválido)</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/30">Ejecutar Decisión</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

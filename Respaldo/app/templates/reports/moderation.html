@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-8">Panel de Moderación</h1>
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
+    <table class="w-full text-left">
+        <thead class="border-b"><tr><th>ID Anuncio</th><th>Motivo</th><th>Acción</th></tr></thead>
+        <tbody>
+            {% for report in pending_reports %}
+            <tr class="border-b">
+                <td class="py-4">#{{ report.listing_id }}</td>
+                <td class="py-4 text-red-500 font-bold">{{ report.report_type }}</td>
+                <td class="py-4"><a href="{{ url_for('reports.review', report_id=report.id) }}" class="text-blue-600 font-bold">Revisar</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

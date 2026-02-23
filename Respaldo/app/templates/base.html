@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Panama Classifieds</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="{{ url_for('main.index') }}" class="text-2xl font-bold text-blue-600">Panama Classifieds</a>
+            <nav class="space-x-4">
+                <a href="{{ url_for('listings.index') }}" class="hover:text-blue-600">Explorar</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('listings.create') }}" class="hover:text-blue-600">Publicar</a>
+                <a href="{{ url_for('chat.index') }}" class="hover:text-blue-600">Mensajes</a>
+                <a href="{{ url_for('listings.my_listings') }}" class="hover:text-blue-600">Mis Anuncios</a>
+                {% if current_user.is_moderator %}
+                <a href="{{ url_for('reports.moderation') }}" class="text-red-500 font-bold">🛡️ Moderación</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" class="text-gray-500">Salir</a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="hover:text-blue-600">Entrar</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
