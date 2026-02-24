@@ -1,0 +1,9 @@
+pip install Flask-WTF WTForms flask db upgrade flask db migrate -m "Agregando tablas de Favoritos y Transacciones"
+
+flask db upgrade pip install Pillow pip install redis flask db migrate -m "Agregando atributos JSON a listados"
+
+flask db upgrade flask db migrate -m "Agregando atributos dinamicos JSON"
+
+flask db upgrade flask db migrate -m "Creando tabla de Preguntas y Respuestas"
+
+flask db upgrade python run.py
