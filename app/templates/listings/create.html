@@ -29,13 +29,13 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <label class="border-2 rounded-xl p-4 cursor-pointer transition-all hover:border-gray-400 has-[:checked]:border-gray-800 has-[:checked]:bg-gray-50 relative">
-                            <input type="radio" name="tier" value="Gratis" title="Paquete Gratis" aria-label="Paquete Gratis" class="hidden" onchange="updateTierLimits('Gratis')" {% if not is_edit or listing.tier == 'Gratis' %}checked{% endif %}>
+                            <input type="radio" name="tier" value="Gratis" class="hidden" onchange="updateTierLimits('Gratis')" {% if not is_edit or listing.tier == 'Gratis' %}checked{% endif %}>
                             <div class="font-black text-lg text-gray-800">Básico (Gratis)</div>
                             <div class="text-xs mt-2 text-gray-500">Visibilidad normal. <br>Duración hasta 35 días.</div>
                         </label>
                         
                         <label class="border-2 rounded-xl p-4 transition-all relative {% if has_prof %}cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50{% else %}opacity-50 grayscale cursor-not-allowed border-gray-200{% endif %}">
-                            <input type="radio" name="tier" value="Profesional" title="Paquete Profesional" aria-label="Paquete Profesional" class="hidden" onchange="updateTierLimits('Profesional')" {% if has_prof and is_edit and listing.tier == 'Profesional' %}checked{% endif %} {% if not has_prof %}disabled{% endif %}>
+                            <input type="radio" name="tier" value="Profesional" class="hidden" onchange="updateTierLimits('Profesional')" {% if has_prof and is_edit and listing.tier == 'Profesional' %}checked{% endif %} {% if not has_prof %}disabled{% endif %}>
                             <div class="font-black text-lg text-blue-700">Profesional</div>
                             <div class="text-xs font-bold text-blue-600 mt-1">Créditos: {{ prof_credits }}</div>
                             <div class="text-xs mt-2 text-gray-500">Borde resaltado. <br>Consume 1 crédito.</div>
@@ -46,7 +46,7 @@
                         
                         <label class="border-2 rounded-xl p-4 transition-all relative overflow-hidden {% if has_prem %}cursor-pointer hover:border-amazon-hover has-[:checked]:border-amazon-accent has-[:checked]:bg-yellow-50{% else %}opacity-50 grayscale cursor-not-allowed border-gray-200{% endif %}">
                             <div class="absolute top-0 right-0 bg-amazon-accent text-amazon-base text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">RECOMENDADO</div>
-                            <input type="radio" name="tier" value="Premium" title="Paquete Premium" aria-label="Paquete Premium" class="hidden" onchange="updateTierLimits('Premium')" {% if has_prem and is_edit and listing.tier == 'Premium' %}checked{% endif %} {% if not has_prem %}disabled{% endif %}>
+                            <input type="radio" name="tier" value="Premium" class="hidden" onchange="updateTierLimits('Premium')" {% if has_prem and is_edit and listing.tier == 'Premium' %}checked{% endif %} {% if not has_prem %}disabled{% endif %}>
                             <div class="font-black text-lg text-yellow-700">Premium ⭐</div>
                             <div class="text-xs font-bold text-yellow-600 mt-1">Créditos: {{ prem_credits }}</div>
                             <div class="text-xs mt-2 text-gray-500">Máxima exposición. <br>Consume 1 crédito.</div>
@@ -58,7 +58,7 @@
 
                     <div class="flex items-center gap-3">
                         <label for="duration_days" class="text-sm font-bold text-gray-700">Duración de la campaña:</label>
-                        <input type="number" id="duration_days" name="duration_days" title="Días de duración" aria-label="Días de duración" value="{{ listing.duration_days if is_edit else 20 }}" class="w-24 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-amazon-accent font-bold text-center outline-none">
+                        <input type="number" id="duration_days" name="duration_days" value="{{ listing.duration_days if is_edit else 20 }}" class="w-24 px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-amazon-accent font-bold text-center outline-none">
                         <span class="text-xs text-gray-500">Días</span>
                     </div>
                 </div>
@@ -78,13 +78,13 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
                     <div>
                         <label for="title" class="text-sm font-bold text-gray-700 mb-1 block">Título del producto</label>
-                        <input type="text" id="title" name="title" value="{{ listing.title if is_edit else '' }}" required title="Título del anuncio" aria-label="Título del anuncio" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">
+                        <input type="text" id="title" name="title" value="{{ listing.title if is_edit else '' }}" required class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="category_id" class="text-sm font-bold text-gray-700 mb-1 block">Categoría</label>
-                            <select id="category_id" name="category_id" required title="Seleccionar categoría" aria-label="Seleccionar categoría" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
+                            <select id="category_id" name="category_id" required class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
                                 <option value="">Selecciona una categoría</option>
                                 {% for c in categories %}
                                 <option value="{{ c.id }}" {% if is_edit and listing.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
@@ -94,7 +94,7 @@
                         
                         <div>
                             <label for="condition" class="text-sm font-bold text-gray-700 mb-1 block">Condición del Artículo</label>
-                            <select id="condition" name="condition" title="Condición" aria-label="Condición del Artículo" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
+                            <select id="condition" name="condition" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
                                 <option value="Nuevo" {% if is_edit and listing.condition == 'Nuevo' %}selected{% endif %}>Nuevo</option>
                                 <option value="Usado - Como Nuevo" {% if is_edit and listing.condition == 'Usado - Como Nuevo' %}selected{% endif %}>Usado - Como Nuevo</option>
                                 <option value="Usado - Buen Estado" {% if is_edit and listing.condition == 'Usado - Buen Estado' %}selected{% endif %}>Usado - Buen Estado</option>
@@ -157,16 +157,16 @@
 
                     <div>
                         <label for="description" class="text-sm font-bold text-gray-700 mb-1 block">Descripción detallada</label>
-                        <textarea id="description" name="description" rows="5" required title="Descripción" aria-label="Descripción" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">{{ listing.description if is_edit else '' }}</textarea>
+                        <textarea id="description" name="description" rows="5" required class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">{{ listing.description if is_edit else '' }}</textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-5">
                         <div>
                             <label for="price" class="text-sm font-bold text-gray-700 mb-1 block">Precio ($)</label>
                             <div class="flex items-center gap-4">
-                                <input type="number" step="0.01" id="price" name="price" value="{{ listing.price if is_edit else '' }}" required title="Precio" aria-label="Precio" class="flex-1 px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">
+                                <input type="number" step="0.01" id="price" name="price" value="{{ listing.price if is_edit else '' }}" required class="flex-1 px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">
                                 <label for="is_negotiable" class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer whitespace-nowrap bg-gray-50 px-3 py-2.5 rounded-md border border-gray-200">
-                                    <input type="checkbox" id="is_negotiable" name="is_negotiable" value="true" title="Precio Negociable" aria-label="Precio Negociable" class="w-4 h-4 text-amazon-accent focus:ring-amazon-accent rounded border-gray-300" {% if is_edit and listing.is_negotiable %}checked{% elif not is_edit %}checked{% endif %}>
+                                    <input type="checkbox" id="is_negotiable" name="is_negotiable" value="true" class="w-4 h-4 text-amazon-accent focus:ring-amazon-accent rounded border-gray-300" {% if is_edit and listing.is_negotiable %}checked{% elif not is_edit %}checked{% endif %}>
                                     Negociable
                                 </label>
                             </div>
@@ -176,7 +176,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="province" class="text-sm font-bold text-gray-700 mb-1 block">Provincia</label>
-                            <select id="province" name="province" required title="Provincia" aria-label="Provincia" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
+                            <select id="province" name="province" required class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
                                 <option value="">Selecciona tu provincia...</option>
                                 {% set provs = ['Panamá', 'Panamá Oeste', 'Chiriquí', 'Colón', 'Coclé', 'Veraguas', 'Herrera', 'Los Santos', 'Bocas del Toro', 'Darién'] %}
                                 {% for p in provs %}
@@ -186,7 +186,7 @@
                         </div>
                         <div>
                             <label for="district" class="text-sm font-bold text-gray-700 mb-1 block">Zona / Distrito</label>
-                            <input type="text" id="district" name="district" value="{{ listing.district if is_edit else '' }}" required placeholder="Ej: San Miguelito" title="Distrito" aria-label="Distrito" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">
+                            <input type="text" id="district" name="district" value="{{ listing.district if is_edit else '' }}" required placeholder="Ej: San Miguelito" class="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-amazon-accent outline-none transition-all">
                         </div>
                     </div>
                 </div>
@@ -215,24 +215,9 @@
                         <span class="material-icons-round text-gray-400 text-5xl mb-2">add_photo_alternate</span>
                         <p class="font-bold text-gray-700 text-lg">Haz clic, arrastra tus fotos aquí</p>
                         <p class="text-sm text-gray-500 mt-1">También puedes usar <kbd class="bg-gray-200 px-1 rounded font-mono">Ctrl</kbd> + <kbd class="bg-gray-200 px-1 rounded font-mono">V</kbd></p>
-                        <input type="file" id="images" name="images" multiple accept="image/*, image/avif, image/webp" class="hidden" title="Subir imágenes" aria-label="Subir imágenes">
+                        <input type="file" id="images" name="images" multiple accept="image/*, image/avif, image/webp" class="hidden">
                     </label>
                     <div id="image-preview" class="flex gap-4 mt-6 overflow-x-auto pb-2"></div>
-                </div>
-
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl shadow-sm border border-blue-200">
-                    <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><span class="material-icons-round text-blue-600">360</span> Tour Virtual 360° Inmersivo (Opcional)</h3>
-                    <p class="text-sm text-gray-600 mb-4">Sube una fotografía panorámica (equirectangular) de tu auto o inmueble. Recuerda: es solo <strong>una (1)</strong> foto alargada. Nuestro sistema creará un recorrido interactivo automático.</p>
-                    
-                    {% if is_edit and listing.virtual_tour_url %}
-                    <div class="mb-4 text-sm font-bold text-green-700 bg-green-100 p-2 rounded">✅ Ya tienes un Tour 360 activo. Sube una imagen nueva solo si deseas reemplazarlo.</div>
-                    {% endif %}
-                    
-                    <input type="file" id="virtual_tour" name="virtual_tour" accept="image/*, image/avif, image/webp" title="Subir archivo de Tour Virtual" aria-label="Subir archivo de Tour Virtual" class="w-full px-4 py-2.5 rounded-md border border-blue-300 bg-white focus:ring-2 focus:ring-amazon-accent outline-none">
-                    
-                    <div id="vt-live-preview" class="w-full h-[300px] mt-4 rounded-lg border-2 border-blue-200 overflow-hidden hidden cursor-move relative">
-                        <div class="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded z-10 shadow-sm">VISTA PREVIA TEMPORAL</div>
-                    </div>
                 </div>
                 
                 <button type="submit" class="w-full bg-amazon-accent text-amazon-base py-4 rounded font-bold hover:bg-amazon-hover transition-colors shadow-sm text-lg flex items-center justify-center gap-2">
@@ -252,7 +237,6 @@
                 <div class="p-5 overflow-y-auto space-y-5 text-sm">
                     <div><h4 class="font-bold text-gray-900 flex items-start gap-2"><span class="text-blue-600">1.</span> Sube fotos de calidad</h4><p class="text-gray-600 text-xs mt-1 leading-relaxed ml-4">Los anuncios con fotos claras e iluminadas venden hasta 3 veces más rápido.</p></div>
                     <div><h4 class="font-bold text-gray-900 flex items-start gap-2"><span class="text-blue-600">2.</span> Usa categorías relevantes</h4><p class="text-gray-600 text-xs mt-1 leading-relaxed ml-4">Asegúrate de no promover servicios en la sección incorrecta.</p></div>
-                    <div><h4 class="font-bold text-gray-900 flex items-start gap-2"><span class="text-blue-600">3.</span> Tour 360°</h4><p class="text-gray-600 text-xs mt-1 leading-relaxed ml-4">Usa una cámara 360 o la función de "Panorámica" de tu celular para crear una inmersión total en vehículos o casas.</p></div>
                 </div>
             </div>
         </aside>
@@ -262,11 +246,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
-<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 <script src="{{ url_for('static', filename='js/listing-create.js') }}"></script>
 <script>
-    // Mostrar paneles según categoría al cargar (Para edición)
     function togglePanels() {
         const val = document.getElementById('category_id').value;
         const panelVehiculos = document.getElementById('panel-vehiculos');
