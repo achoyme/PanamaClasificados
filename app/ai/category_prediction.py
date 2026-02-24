@@ -1,28 +1,33 @@
 class CategoryPredictionService:
-    def predict_category(self, title, description, image_url=None):
+    def __init__(self):
+        # Diccionario de palabras clave estructurado
+        self.keywords = {
+            1: ['telefono', 'celular', 'laptop', 'computadora', 'tv', 'consola', 'iphone', 'samsung', 'pantalla', 'audio'],
+            2: ['auto', 'carro', 'camioneta', 'moto', 'nissan', 'toyota', 'honda', 'llantas', 'motor', 'sedan'],
+            3: ['casa', 'apartamento', 'terreno', 'alquiler', 'venta', 'cuarto', 'ph', 'recamaras', 'edificio', 'lote'],
+            4: ['camisa', 'pantalon', 'zapatos', 'vestido', 'zapatillas', 'ropa', 'reloj', 'lentes', 'cartera', 'talla'],
+            5: ['sofa', 'cama', 'mesa', 'silla', 'nevera', 'estufa', 'mueble', 'colchon', 'comedor', 'licuadora']
+        }
+
+    def predict_category(self, title, description):
         text = f"{title} {description}".lower()
         
-        # Lógica heurística: buscar palabras clave comunes para predecir la categoría
-        if any(w in text for w in ['iphone', 'samsung', 'celular', 'laptop', 'pc', 'tablet', 'tv', 'camara']):
-            cat_id = 1  # Asumiendo que 1 es Electrónica
-            confidence = 95.5
-        elif any(w in text for w in ['auto', 'toyota', 'nissan', 'honda', 'carro', 'moto', 'llantas', 'motor']):
-            cat_id = 2  # Asumiendo que 2 es Vehículos
-            confidence = 92.0
-        elif any(w in text for w in ['casa', 'apartamento', 'alquiler', 'cuarto', 'terreno', 'local']):
-            cat_id = 3  # Asumiendo que 3 es Inmuebles
-            confidence = 90.0
-        elif any(w in text for w in ['ropa', 'zapatos', 'camisa', 'pantalon', 'moda', 'vestido']):
-            cat_id = 4  # Moda
-            confidence = 88.0
-        elif any(w in text for w in ['silla', 'mesa', 'mueble', 'cama', 'sofa', 'comedor']):
-            cat_id = 5  # Hogar
-            confidence = 85.0
-        else:
-            cat_id = 1  # Categoría por defecto si no encuentra coincidencias
-            confidence = 60.0
-            
+        best_match_id = 1 # Por defecto (Electrónica / Otros)
+        max_matches = 0
+        
+        # Lógica determinista: Gana la categoría con más palabras clave encontradas
+        for cat_id, words in self.keywords.items():
+            matches = sum(1 for word in words if word in text)
+            if matches > max_matches:
+                max_matches = matches
+                best_match_id = cat_id
+                
+        # Calculamos la confianza en base a la cantidad de coincidencias
+        confidence = 50.0 + (max_matches * 10.0)
+        if confidence > 95.0: confidence = 95.0
+        if max_matches == 0: confidence = 40.0
+        
         return {
-            'category_id': cat_id,
-            'confidence': confidence
+            'category_id': best_match_id,
+            'confidence': round(confidence, 1)
         }
