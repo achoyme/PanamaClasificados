@@ -231,7 +231,18 @@
                         <div class="flex items-start gap-3">
                             <span class="material-icons-round text-gray-300 mt-0.5 text-[20px]">chat_bubble_outline</span>
                             <div class="flex-1">
+                                
+                                <p class="text-[11px] text-gray-500 font-bold mb-0.5">
+                                    {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                                        <span class="text-blue-600">{{ q.user.first_name }} {{ q.user.last_name }}</span> (Comprador)
+                                    {% else %}
+                                        {{ q.user.first_name[:2] }}***
+                                    {% endif %}
+                                    <span class="font-normal text-gray-400 ml-1">• {{ q.created_at.strftime('%d/%m/%Y') }}</span>
+                                </p>
+                                
                                 <p class="text-gray-900 text-sm font-medium">{{ q.content }}</p>
+                                
                                 {% if q.answer %}
                                 <div class="mt-2 flex items-start gap-2 ml-1 border-l-2 border-gray-200 pl-4">
                                     <span class="material-icons-round text-gray-400 text-[18px] transform rotate-180">subdirectory_arrow_right</span>
