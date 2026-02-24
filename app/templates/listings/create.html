@@ -108,26 +108,26 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Marca</label>
-                                <input type="text" name="attr_marca" placeholder="Ej: Toyota" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 2 and listing.attributes %}value="{{ listing.attributes.get('marca', '') }}"{% endif %}>
+                                <input type="text" name="attr_marca" placeholder="Ej: Toyota" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('marca', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Modelo</label>
-                                <input type="text" name="attr_modelo" placeholder="Ej: Hilux" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 2 and listing.attributes %}value="{{ listing.attributes.get('modelo', '') }}"{% endif %}>
+                                <input type="text" name="attr_modelo" placeholder="Ej: Hilux" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('modelo', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Año</label>
-                                <input type="number" name="attr_ano" placeholder="Ej: 2020" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 2 and listing.attributes %}value="{{ listing.attributes.get('ano', '') }}"{% endif %}>
+                                <input type="number" name="attr_ano" placeholder="Ej: 2020" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('ano', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Kilometraje</label>
-                                <input type="number" name="attr_kilometraje" placeholder="Km" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 2 and listing.attributes %}value="{{ listing.attributes.get('kilometraje', '') }}"{% endif %}>
+                                <input type="number" name="attr_kilometraje" placeholder="Km" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('kilometraje', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Transmisión</label>
                                 <select name="attr_transmision" class="w-full px-3 py-2 text-sm rounded border border-gray-300">
                                     <option value="">Selecciona...</option>
-                                    <option value="Automática" {% if is_edit and listing.category_id == 2 and listing.attributes and listing.attributes.get('transmision') == 'Automática' %}selected{% endif %}>Automática</option>
-                                    <option value="Manual" {% if is_edit and listing.category_id == 2 and listing.attributes and listing.attributes.get('transmision') == 'Manual' %}selected{% endif %}>Manual</option>
+                                    <option value="Automática" {% if is_edit and listing.attributes and listing.attributes.get('transmision') == 'Automática' %}selected{% endif %}>Automática</option>
+                                    <option value="Manual" {% if is_edit and listing.attributes and listing.attributes.get('transmision') == 'Manual' %}selected{% endif %}>Manual</option>
                                 </select>
                             </div>
                         </div>
@@ -138,19 +138,19 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Habitaciones</label>
-                                <input type="number" name="attr_habitaciones" placeholder="Ej: 3" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 3 and listing.attributes %}value="{{ listing.attributes.get('habitaciones', '') }}"{% endif %}>
+                                <input type="number" name="attr_habitaciones" placeholder="Ej: 3" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('habitaciones', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Baños</label>
-                                <input type="number" step="0.5" name="attr_banos" placeholder="Ej: 2.5" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 3 and listing.attributes %}value="{{ listing.attributes.get('banos', '') }}"{% endif %}>
+                                <input type="number" step="0.5" name="attr_banos" placeholder="Ej: 2.5" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('banos', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Tamaño (m²)</label>
-                                <input type="number" name="attr_metros" placeholder="Metros" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 3 and listing.attributes %}value="{{ listing.attributes.get('metros_cuadrados', '') }}"{% endif %}>
+                                <input type="number" name="attr_metros" placeholder="Metros" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('metros_cuadrados', '') }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Estacionamientos</label>
-                                <input type="number" name="attr_estacionamientos" placeholder="Ej: 2" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.category_id == 3 and listing.attributes %}value="{{ listing.attributes.get('estacionamientos', '') }}"{% endif %}>
+                                <input type="number" name="attr_estacionamientos" placeholder="Ej: 2" class="w-full px-3 py-2 text-sm rounded border border-gray-300" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('estacionamientos', '') }}"{% endif %}>
                             </div>
                         </div>
                     </div>
@@ -246,18 +246,25 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/listing-create.js') }}"></script>
 <script>
+    // CORRECCIÓN: Ahora lee el TEXTO de la categoría, no importa qué ID tenga
     function togglePanels() {
-        const val = document.getElementById('category_id').value;
+        const select = document.getElementById('category_id');
+        if (!select.value) return;
+
+        const text = select.options[select.selectedIndex].text.toLowerCase();
+        
         const panelVehiculos = document.getElementById('panel-vehiculos');
         const panelInmuebles = document.getElementById('panel-inmuebles');
         
         panelVehiculos.classList.add('hidden');
         panelInmuebles.classList.add('hidden');
 
-        if (val === '2') { panelVehiculos.classList.remove('hidden'); } 
-        else if (val === '3') { panelInmuebles.classList.remove('hidden'); }
+        if (text.includes('vehículo') || text.includes('auto') || text.includes('motor') || text.includes('vehiculo')) {
+            panelVehiculos.classList.remove('hidden');
+        } else if (text.includes('inmueble') || text.includes('bienes') || text.includes('raíces') || text.includes('raices') || text.includes('casa')) {
+            panelInmuebles.classList.remove('hidden');
+        }
     }
 
     document.getElementById('category_id').addEventListener('change', togglePanels);
@@ -302,4 +309,5 @@
         }
     }
 </script>
+<script src="{{ url_for('static', filename='js/listing-create.js') }}"></script>
 {% endblock %}
