@@ -1,10 +1,16 @@
 {% extends "base.html" %}
+
 {% block title %}{{ listing.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <div class="text-xs text-gray-500 mb-6 flex items-center gap-2">
-        <a href="{{ url_for('listings.index') }}" class="hover:underline flex items-center"><span class="material-icons-round text-sm mr-1">arrow_back_ios</span> Volver a los resultados de búsqueda</a>
+        <a href="{{ url_for('listings.index') }}" class="hover:underline flex items-center"><span class="material-icons-round text-sm mr-1">arrow_back_ios</span> Volver a los resultados</a>
         <span class="text-gray-300">|</span>
         <span>Listado en la categoría: <span class="text-blue-600 font-medium">{{ listing.category.name if listing.category else 'General' }}</span></span>
     </div>
@@ -83,7 +89,7 @@
                     <div class="mt-6 flex flex-col gap-2 text-sm text-gray-700">
                         <div class="flex items-start gap-2">
                             <span class="material-icons-round text-gray-400 text-[18px]">place</span>
-                            <span>Ubicación del artículo: <br><span class="font-bold">{{ listing.district }}, {{ listing.province }}, Panamá</span></span>
+                            <span>Ubicación general: <br><span class="font-bold">{{ listing.district }}, {{ listing.province }}, Panamá</span></span>
                         </div>
                     </div>
                 </div>
@@ -167,6 +173,17 @@
     </div>
     {% endif %}
 
+    <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center gap-2">
+            <span class="material-icons-round text-blue-600">map</span>
+            <h2 class="font-bold text-gray-900 text-lg">Ubicación aproximada</h2>
+        </div>
+        <div id="location-map" class="w-full h-[300px] bg-gray-200 z-0"></div>
+        <div class="px-6 py-3 bg-white text-xs text-gray-500">
+            <p><span class="font-bold text-gray-800">Zona:</span> {{ listing.district }}, {{ listing.province }}. <br>El área sombreada representa el distrito donde se encuentra el artículo para proteger la privacidad del vendedor.</p>
+        </div>
+    </div>
+
     {% if listing.virtual_tour_url %}
     <div class="mt-8 bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
         <h2 class="font-black text-amazon-base text-lg mb-3 flex items-center gap-2">
@@ -198,7 +215,6 @@
             </h2>
         </div>
         <div class="p-6 md:p-8">
-            
             {% if current_user.is_authenticated %}
                 {% if current_user.id != listing.user_id %}
                 <div class="mb-10">
@@ -226,7 +242,6 @@
                             <span class="material-icons-round text-gray-300 mt-0.5 text-[20px]">chat_bubble_outline</span>
                             <div class="flex-1">
                                 <p class="text-gray-900 text-sm font-medium">{{ q.content }}</p>
-                                
                                 {% if q.answer %}
                                 <div class="mt-2 flex items-start gap-2 ml-1 border-l-2 border-gray-200 pl-4">
                                     <span class="material-icons-round text-gray-400 text-[18px] transform rotate-180">subdirectory_arrow_right</span>
@@ -325,11 +340,56 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
 <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 
-{% if listing.virtual_tour_url %}
 <script>
+    // ==========================================
+    // INICIALIZADOR DEL MAPA INTERACTIVO
+    // ==========================================
+    document.addEventListener("DOMContentLoaded", function() {
+        // Obtenemos la ubicación de la base de datos
+        const distrito = "{{ listing.district }}";
+        const provincia = "{{ listing.province }}";
+        const query = `${distrito}, ${provincia}, Panama`;
+
+        // Centro geográfico de Panamá por defecto
+        const map = L.map('location-map').setView([8.537981, -80.782066], 7);
+        
+        // Cargamos los bloques del mapa desde OpenStreetMap (¡Gratis!)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Usamos la API de Nominatim para transformar el texto en coordenadas (Geocoding)
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    
+                    // Centramos el mapa en el distrito
+                    map.setView([lat, lon], 12);
+
+                    // Dibujamos un círculo de 2km de radio para mantener la privacidad
+                    L.circle([lat, lon], {
+                        color: '#2563eb', // Borde azul
+                        fillColor: '#3b82f6', // Relleno azul
+                        fillOpacity: 0.3,
+                        radius: 2500 
+                    }).addTo(map);
+                }
+            })
+            .catch(err => console.log("No se pudo cargar la ubicación exacta en el mapa."));
+    });
+
+    // ==========================================
+    // TOUR VIRTUAL 360
+    // ==========================================
+    {% if listing.virtual_tour_url %}
     document.addEventListener("DOMContentLoaded", function() {
         pannellum.viewer('panorama', {
             "type": "equirectangular",
@@ -342,94 +402,93 @@
             "autoRotate": -2
         });
     });
-</script>
-{% endif %}
-
-<script>
-const galleryImages = [
-    {% if listing.images %}
-        {% for img in listing.images %}
-            "{{ img.image_url }}"{% if not loop.last %},{% endif %}
-        {% endfor %}
-    {% else %}
-        "https://placehold.co/800x800?text=Sin+Imagen"
     {% endif %}
-];
 
-let currentMainIndex = 0;
-const lightboxModal = document.getElementById('lightbox-modal');
-const lightboxImg = document.getElementById('lightbox-img');
-const lightboxCounter = document.getElementById('lightbox-counter');
-const mainImageDisplay = document.getElementById('main-image');
+    // Lógica del Lightbox de la Galería
+    const galleryImages = [
+        {% if listing.images %}
+            {% for img in listing.images %}
+                "{{ img.image_url }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        {% else %}
+            "https://placehold.co/800x800?text=Sin+Imagen"
+        {% endif %}
+    ];
 
-function changeMainImage(index, url) {
-    currentMainIndex = index;
-    mainImageDisplay.src = url;
-}
+    let currentMainIndex = 0;
+    const lightboxModal = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCounter = document.getElementById('lightbox-counter');
+    const mainImageDisplay = document.getElementById('main-image');
 
-function openLightbox(index) {
-    currentMainIndex = index;
-    updateLightboxUI();
-    lightboxModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => {
-        lightboxModal.classList.remove('opacity-0');
-        lightboxModal.classList.add('opacity-100');
-    }, 10);
-}
-
-function closeLightbox() {
-    lightboxModal.classList.remove('opacity-100');
-    lightboxModal.classList.add('opacity-0');
-    setTimeout(() => {
-        lightboxModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }, 300);
-}
-
-function nextImage(e) {
-    if(e) e.stopPropagation();
-    currentMainIndex = (currentMainIndex + 1) % galleryImages.length;
-    updateLightboxUI();
-}
-
-function prevImage(e) {
-    if(e) e.stopPropagation();
-    currentMainIndex = (currentMainIndex - 1 + galleryImages.length) % galleryImages.length;
-    updateLightboxUI();
-}
-
-function updateLightboxUI() {
-    lightboxImg.src = galleryImages[currentMainIndex];
-    lightboxCounter.innerText = `${currentMainIndex + 1} / ${galleryImages.length}`;
-}
-
-document.addEventListener('keydown', function(e) {
-    if (!lightboxModal.classList.contains('hidden')) {
-        if (e.key === 'ArrowRight') nextImage();
-        else if (e.key === 'ArrowLeft') prevImage();
-        else if (e.key === 'Escape') closeLightbox();
+    function changeMainImage(index, url) {
+        currentMainIndex = index;
+        mainImageDisplay.src = url;
     }
-});
 
-document.getElementById('report-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const listingId = parseInt("{{ listing.id }}", 10);
-    const csrfToken = document.getElementById('csrf_token').value;
-    const data = { listing_id: listingId, report_type: document.getElementById('report_type').value };
-
-    try {
-        const res = await fetch("{{ url_for('reports.create') }}", {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, 
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        alert(result.message || result.error);
-        document.getElementById('report-modal').classList.add('hidden');
-    } catch (error) {
-        alert("Ocurrió un error al enviar el reporte.");
+    function openLightbox(index) {
+        currentMainIndex = index;
+        updateLightboxUI();
+        lightboxModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            lightboxModal.classList.remove('opacity-0');
+            lightboxModal.classList.add('opacity-100');
+        }, 10);
     }
-});
+
+    function closeLightbox() {
+        lightboxModal.classList.remove('opacity-100');
+        lightboxModal.classList.add('opacity-0');
+        setTimeout(() => {
+            lightboxModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+
+    function nextImage(e) {
+        if(e) e.stopPropagation();
+        currentMainIndex = (currentMainIndex + 1) % galleryImages.length;
+        updateLightboxUI();
+    }
+
+    function prevImage(e) {
+        if(e) e.stopPropagation();
+        currentMainIndex = (currentMainIndex - 1 + galleryImages.length) % galleryImages.length;
+        updateLightboxUI();
+    }
+
+    function updateLightboxUI() {
+        lightboxImg.src = galleryImages[currentMainIndex];
+        lightboxCounter.innerText = `${currentMainIndex + 1} / ${galleryImages.length}`;
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (!lightboxModal.classList.contains('hidden')) {
+            if (e.key === 'ArrowRight') nextImage();
+            else if (e.key === 'ArrowLeft') prevImage();
+            else if (e.key === 'Escape') closeLightbox();
+        }
+    });
+
+    document.getElementById('report-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const listingId = parseInt("{{ listing.id }}", 10);
+        const csrfToken = document.getElementById('csrf_token').value;
+        const data = { listing_id: listingId, report_type: document.getElementById('report_type').value };
+
+        try {
+            const res = await fetch("{{ url_for('reports.create') }}", {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, 
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message || result.error);
+            document.getElementById('report-modal').classList.add('hidden');
+        } catch (error) {
+            alert("Ocurrió un error al enviar el reporte.");
+        }
+    });
 </script>
 {% endblock %}
