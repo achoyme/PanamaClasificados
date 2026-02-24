@@ -12,18 +12,18 @@
     <div class="flex flex-col md:flex-row gap-10">
         
         <div class="w-full md:w-1/2 lg:w-5/12">
-            <div class="bg-gray-50 border border-gray-200 rounded-md overflow-hidden relative group cursor-pointer aspect-square flex items-center justify-center p-2 mb-4" onclick="openLightbox(document.getElementById('main-image').src)">
-                <img id="main-image" src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/800x800?text=Sin+Imagen' }}" alt="Imagen principal de {{ listing.title }}" title="Imagen principal de {{ listing.title }}" aria-label="Imagen de {{ listing.title }}" onerror="this.onerror=null; this.src='https://placehold.co/800x800?text=Sin+Imagen';" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
-                <div class="absolute bottom-4 right-4 bg-white/80 p-2 rounded-full shadow-sm text-gray-600 flex items-center justify-center hover:bg-white transition-colors">
+            <div class="bg-gray-50 border border-gray-200 rounded-md overflow-hidden relative group cursor-pointer aspect-square flex items-center justify-center p-2 mb-4" onclick="openLightbox(currentMainIndex)">
+                <img id="main-image" src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/800x800?text=Sin+Imagen' }}" alt="Imagen principal de {{ listing.title }}" onerror="this.onerror=null; this.src='https://placehold.co/800x800?text=Sin+Imagen';" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
+                <div class="absolute bottom-4 right-4 bg-white/80 p-2 rounded-full shadow-sm text-gray-600 flex items-center justify-center group-hover:bg-white transition-colors">
                     <span class="material-icons-round text-xl">zoom_in</span>
                 </div>
             </div>
 
             {% if listing.images and listing.images|length > 1 %}
-            <div class="flex gap-2 overflow-x-auto pb-2">
+            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300">
                 {% for image in listing.images %}
-                <div class="w-16 h-16 border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:border-blue-600 transition-colors flex-shrink-0" onclick="document.getElementById('main-image').src='{{ image.image_url }}'">
-                    <img src="{{ image.thumbnail_url or image.image_url }}" alt="Miniatura {{ loop.index }}" title="Ver miniatura {{ loop.index }}" aria-label="Ver miniatura {{ loop.index }}" class="w-full h-full object-cover">
+                <div class="w-16 h-16 border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:border-blue-600 transition-all flex-shrink-0" onclick="changeMainImage({{ loop.index0 }}, '{{ image.image_url }}')">
+                    <img src="{{ image.thumbnail_url or image.image_url }}" alt="Miniatura {{ loop.index }}" class="w-full h-full object-cover">
                 </div>
                 {% endfor %}
             </div>
@@ -46,46 +46,91 @@
                         {% endif %}
                     </div>
 
-                    <div class="space-y-3">
-                        {% if current_user.is_authenticated and current_user.id != listing.user_id %}
-                        <a href="{{ url_for('chat.start_chat', listing_id=listing.id) }}" class="flex items-center justify-center w-full bg-amazon-accent hover:bg-amazon-hover text-amazon-base py-3.5 rounded-full font-bold transition-colors shadow-sm">
-                            Contactar al vendedor
-                        </a>
-                        {% elif not current_user.is_authenticated %}
-                        <a href="{{ url_for('auth.login') }}" class="flex items-center justify-center w-full bg-amazon-accent hover:bg-amazon-hover text-amazon-base py-3.5 rounded-full font-bold transition-colors shadow-sm">
-                            Inicia sesión para contactar
-                        </a>
-                        {% endif %}
-                    </div>
+                    {% if listing.status == 'Sold' %}
+                        <div class="bg-red-100 border border-red-300 text-red-800 p-5 rounded-lg flex items-center gap-4 mb-6 shadow-sm">
+                            <span class="material-icons-round text-4xl">sell</span>
+                            <div>
+                                <h3 class="font-black text-lg uppercase tracking-wider">¡Artículo Vendido!</h3>
+                                <p class="text-sm font-medium mt-1">El anuncio se retirará del catálogo pronto.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="space-y-3">
+                            {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                                <div class="bg-blue-50 text-blue-800 p-3 rounded text-sm font-bold text-center border border-blue-200">
+                                    Este es tu propio anuncio.
+                                </div>
+                            {% else %}
+                                <button onclick="document.getElementById('contact-modal').classList.remove('hidden')" class="flex items-center justify-center w-full bg-gray-800 hover:bg-gray-900 text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
+                                    <span class="material-icons-round text-[20px]">email</span>
+                                    Enviar Mensaje Interno
+                                </button>
+
+                                {% if current_user.is_authenticated %}
+                                <a href="https://wa.me/507{{ listing.user.phone_number | default('60000000', true) | replace('-', '') | replace(' ', '') }}?text=Hola,%20vi%20tu%20anuncio%20en%20Panama%20Classifieds:%20{{ listing.title }}.%20¿Aún%20está%20disponible?" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
+                                    <span class="material-icons-round text-[20px]">chat</span>
+                                    Contactar por WhatsApp
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="flex items-center justify-center w-full bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2 text-sm">
+                                    <span class="material-icons-round text-[20px] text-gray-400">lock</span>
+                                    Inicia sesión para ver su WhatsApp
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
 
                     <div class="mt-6 flex flex-col gap-2 text-sm text-gray-700">
                         <div class="flex items-start gap-2">
                             <span class="material-icons-round text-gray-400 text-[18px]">place</span>
                             <span>Ubicación del artículo: <br><span class="font-bold">{{ listing.district }}, {{ listing.province }}, Panamá</span></span>
                         </div>
-                        <div class="flex items-start gap-2 mt-2">
-                            <span class="material-icons-round text-gray-400 text-[18px]">local_shipping</span>
-                            <span>Entrega: <br>Acordar con el vendedor (No gestionado por la plataforma)</span>
-                        </div>
                     </div>
                 </div>
 
                 <div class="w-full lg:w-64 flex flex-col gap-4">
-                    <div class="border border-gray-200 p-4 rounded-md bg-white">
-                        <h3 class="font-bold text-gray-900 mb-2">Información del vendedor</h3>
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="font-bold text-blue-600 underline cursor-pointer">{{ listing.user.first_name }}</div>
-                            <span class="text-xs text-gray-500">(12⭐)</span>
+                    <div class="border border-gray-200 p-4 rounded-md bg-white shadow-sm">
+                        <h3 class="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide border-b border-gray-100 pb-2">Vendido por:</h3>
+                        
+                        <div class="flex items-start gap-3 mb-3">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden">
+                                {% if listing.user.profile_image_url %}
+                                    <img src="{{ listing.user.profile_image_url }}" alt="Avatar" class="w-full h-full object-cover">
+                                {% else %}
+                                    {{ listing.user.first_name[0] | upper }}
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <a href="{{ url_for('main.seller_profile', user_id=listing.user.id) }}" class="font-bold text-blue-600 hover:underline text-lg leading-tight flex items-center gap-1">
+                                    {{ listing.user.first_name }}
+                                </a>
+                                {% if listing.user.account_type == 'Tienda / Promotor' %}
+                                    <span class="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded font-bold border border-yellow-200 mt-1 inline-block"><span class="material-icons-round text-[10px] align-middle">storefront</span> TIENDA</span>
+                                {% endif %}
+                            </div>
                         </div>
+
                         {% if listing.user.is_verified %}
-                        <div class="text-xs text-green-700 font-bold flex items-center gap-1 mb-3">
-                            <span class="material-icons-round text-[14px]">check_circle</span> Vendedor Verificado
+                        <div class="text-xs text-green-700 font-bold flex items-center gap-1 mb-2 bg-green-50 p-1 rounded">
+                            <span class="material-icons-round text-[14px]">verified</span> Vendedor Verificado
                         </div>
                         {% endif %}
-                        <div class="text-xs text-gray-600 space-y-1">
-                            <p>Miembro de la plataforma</p>
-                            <p>Ubicación: Panamá</p>
+                        
+                        <div class="bg-gray-50 p-2 rounded border border-gray-100 mt-3 mb-3 space-y-1">
+                            <p class="text-[10px] font-bold text-gray-500 uppercase">Opciones de Entrega:</p>
+                            {% if listing.user.has_physical_store %}
+                                <p class="text-xs text-green-700 font-bold flex items-center gap-1"><span class="material-icons-round text-[14px]">storefront</span> Retiro en Local</p>
+                            {% endif %}
+                            {% if listing.user.delivery_methods %}
+                                <p class="text-xs text-blue-700 font-bold flex items-center gap-1"><span class="material-icons-round text-[14px]">local_shipping</span> Envíos disponibles</p>
+                            {% endif %}
                         </div>
+                        
+                        <a href="{{ url_for('main.seller_profile', user_id=listing.user.id) }}" class="block w-full text-center text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 py-2 rounded transition-colors">
+                            Ver su Catálogo
+                        </a>
                     </div>
 
                     {% if current_user.is_authenticated and current_user.id != listing.user_id %}
@@ -110,6 +155,28 @@
     </div>
     {% endif %}
 
+    {% if listing.attributes and listing.attributes|length > 0 %}
+    <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center gap-2">
+            <span class="material-icons-round text-blue-600">list_alt</span>
+            <h2 class="font-bold text-gray-900 text-lg">Características principales</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+                {% for key, value in listing.attributes.items() %}
+                    {% if value %} <div class="bg-white p-3 border border-gray-100 rounded shadow-sm">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">{{ key | replace('_', ' ') }}</p>
+                        <p class="text-sm font-black text-gray-900 capitalize">{{ value }}
+                            {% if key == 'kilometraje' %} Km {% elif key == 'metros_cuadrados' %} m² {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="mt-8 border border-gray-200 rounded-md">
         <div class="bg-gray-100 border-b border-gray-200 px-6 py-3">
             <h2 class="font-bold text-gray-900 text-lg">Descripción del artículo</h2>
@@ -118,18 +185,29 @@
             <p class="text-gray-800 whitespace-pre-line text-base leading-relaxed max-w-4xl">{{ listing.description }}</p>
             
             <div class="mt-10 p-4 bg-gray-50 border border-gray-200 text-xs text-gray-600 leading-relaxed max-w-4xl rounded">
-                <span class="font-bold text-gray-800 block mb-1">Aviso de responsabilidad de Panama Classifieds:</span>
-                Esta plataforma funciona exclusivamente como un catálogo visual para conectar personas. No intervenimos ni respaldamos ninguna transacción. Las direcciones de entrega, los métodos de pago y las políticas de garantía o devolución deben ser acordadas estrictamente de forma externa entre el comprador y el vendedor. Recomendamos siempre reunirse en lugares públicos y seguros para finalizar la transacción.
+                <span class="font-bold text-gray-800 block mb-1">Aviso de responsabilidad:</span>
+                Panama Classifieds funciona exclusivamente como un catálogo visual. Las direcciones de entrega, pagos y garantías deben ser acordadas entre comprador y vendedor. Recomendamos reunirse en lugares públicos seguros.
             </div>
         </div>
     </div>
 </div>
 
-<div id="lightbox-modal" class="hidden fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" onclick="closeLightbox()">
-    <button class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-50">
-        <span class="material-icons-round text-4xl">close</span>
+<div id="lightbox-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closeLightbox()">
+    <button class="absolute top-4 right-4 md:top-8 md:right-8 text-white/70 hover:text-white transition-colors z-50 p-2">
+        <span class="material-icons-round text-4xl drop-shadow-md">close</span>
     </button>
-    <img id="lightbox-img" src="" alt="Imagen ampliada del artículo" title="Imagen ampliada" aria-label="Imagen en tamaño completo" class="max-w-full max-h-[90vh] object-contain shadow-2xl rounded-lg">
+    <button onclick="prevImage(event)" class="absolute left-2 md:left-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group">
+        <span class="material-icons-round text-6xl md:text-7xl drop-shadow-xl group-hover:-translate-x-1 transition-transform">chevron_left</span>
+    </button>
+    <div class="relative w-full h-full flex items-center justify-center pointer-events-none">
+        <img id="lightbox-img" src="" alt="Imagen ampliada" class="max-w-full max-h-[85vh] object-contain drop-shadow-2xl rounded pointer-events-auto select-none" onclick="event.stopPropagation();">
+    </div>
+    <button onclick="nextImage(event)" class="absolute right-2 md:right-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group">
+        <span class="material-icons-round text-6xl md:text-7xl drop-shadow-xl group-hover:translate-x-1 transition-transform">chevron_right</span>
+    </button>
+    <div id="lightbox-counter" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm font-bold tracking-widest px-6 py-2 rounded-full backdrop-blur-sm border border-white/10">
+        1 / 1
+    </div>
 </div>
 
 <div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -137,13 +215,44 @@
         <h2 class="text-xl font-bold mb-4 text-black">Informar sobre el artículo</h2>
         <form id="report-form" class="space-y-4">
             <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">
-            <select name="report_type" id="report_type" aria-label="Motivo del reporte" title="Selecciona el motivo del reporte" class="w-full p-3 border border-gray-300 rounded-md text-black focus:ring-1 focus:ring-blue-600 outline-none">
+            <select name="report_type" id="report_type" class="w-full p-3 border border-gray-300 rounded-md text-black focus:ring-1 focus:ring-blue-600 outline-none">
                 <option value="FakePrice">Precio engañoso</option>
                 <option value="SuspiciousSeller">Prácticas fraudulentas</option>
                 <option value="IllegalContent">Artículo prohibido o inapropiado</option>
             </select>
             <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold hover:bg-blue-700 transition-colors">Enviar informe</button>
             <button type="button" onclick="document.getElementById('report-modal').classList.add('hidden')" class="w-full py-2 text-blue-600 hover:underline font-bold">Cancelar</button>
+        </form>
+    </div>
+</div>
+
+<div id="contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
+            <h2 class="text-xl font-bold text-gray-900">Contactar al Vendedor</h2>
+            <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-800"><span class="material-icons-round">close</span></button>
+        </div>
+        <form action="{{ url_for('listings.contact_seller', listing_id=listing.id) }}" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Tu Nombre</label>
+                <input type="text" name="buyer_name" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Ej. Juan Pérez">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tu Correo</label>
+                    <input type="email" name="buyer_email" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tu Celular (Opcional)</label>
+                    <input type="tel" name="buyer_phone" class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje</label>
+                <textarea name="buyer_message" rows="3" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-bold transition-colors shadow-sm">Enviar Mensaje Seguro</button>
         </form>
     </div>
 </div>
@@ -171,47 +280,89 @@
 {% endif %}
 
 <script>
-// ==========================================
-// 2. FUNCIONES DEL LIGHTBOX
-// ==========================================
-function openLightbox(imageSrc) {
-    document.getElementById('lightbox-img').src = imageSrc;
-    document.getElementById('lightbox-modal').classList.remove('hidden');
+const galleryImages = [
+    {% if listing.images %}
+        {% for img in listing.images %}
+            "{{ img.image_url }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+    {% else %}
+        "https://placehold.co/800x800?text=Sin+Imagen"
+    {% endif %}
+];
+
+let currentMainIndex = 0;
+const lightboxModal = document.getElementById('lightbox-modal');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxCounter = document.getElementById('lightbox-counter');
+const mainImageDisplay = document.getElementById('main-image');
+
+function changeMainImage(index, url) {
+    currentMainIndex = index;
+    mainImageDisplay.src = url;
 }
+
+function openLightbox(index) {
+    currentMainIndex = index;
+    updateLightboxUI();
+    lightboxModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        lightboxModal.classList.remove('opacity-0');
+        lightboxModal.classList.add('opacity-100');
+    }, 10);
+}
+
 function closeLightbox() {
-    document.getElementById('lightbox-modal').classList.add('hidden');
+    lightboxModal.classList.remove('opacity-100');
+    lightboxModal.classList.add('opacity-0');
+    setTimeout(() => {
+        lightboxModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }, 300);
 }
-document.getElementById('lightbox-img').addEventListener('click', function(e) {
-    e.stopPropagation();
+
+function nextImage(e) {
+    if(e) e.stopPropagation();
+    currentMainIndex = (currentMainIndex + 1) % galleryImages.length;
+    updateLightboxUI();
+}
+
+function prevImage(e) {
+    if(e) e.stopPropagation();
+    currentMainIndex = (currentMainIndex - 1 + galleryImages.length) % galleryImages.length;
+    updateLightboxUI();
+}
+
+function updateLightboxUI() {
+    lightboxImg.src = galleryImages[currentMainIndex];
+    lightboxCounter.innerText = `${currentMainIndex + 1} / ${galleryImages.length}`;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (!lightboxModal.classList.contains('hidden')) {
+        if (e.key === 'ArrowRight') nextImage();
+        else if (e.key === 'ArrowLeft') prevImage();
+        else if (e.key === 'Escape') closeLightbox();
+    }
 });
 
-// ==========================================
-// 3. ENVÍO DE REPORTE CON SEGURIDAD CSRF
-// ==========================================
 document.getElementById('report-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const listingId = parseInt("{{ listing.id }}", 10);
     const csrfToken = document.getElementById('csrf_token').value;
-    
-    const data = {
-        listing_id: listingId, 
-        report_type: document.getElementById('report_type').value
-    };
+    const data = { listing_id: listingId, report_type: document.getElementById('report_type').value };
 
     try {
         const res = await fetch("{{ url_for('reports.create') }}", {
             method: 'POST', 
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            }, 
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, 
             body: JSON.stringify(data)
         });
         const result = await res.json();
         alert(result.message || result.error);
         document.getElementById('report-modal').classList.add('hidden');
     } catch (error) {
-        alert("Ocurrió un error al enviar el reporte. Por favor, recarga la página.");
+        alert("Ocurrió un error al enviar el reporte.");
     }
 });
 </script>
