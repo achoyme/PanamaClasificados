@@ -15,45 +15,44 @@ class User(UserMixin, db.Model):
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(20))
 
-    # Ubicación
     province = Column(String(100))
     district = Column(String(100))
     city = Column(String(100))
 
-    # Verificación y reputación
+    account_type = Column(String(50), default='Particular')
+
+    has_physical_store = Column(Boolean, default=False)
+    store_address = Column(String(500))
+    delivery_methods = Column(String(255)) 
+
     is_verified = Column(Boolean, default=False)
     verification_date = Column(DateTime)
     reputation_score = Column(Numeric(3, 2), default=0.00)
     total_sales = Column(Integer, default=0)
 
-    # Avatar
     profile_image_url = Column(String(500))
 
-    # Seguridad
     is_active = Column(Boolean, default=True)
     is_banned = Column(Boolean, default=False)
     banned_reason = Column(String(500))
     banned_date = Column(DateTime)
 
-    # Roles
     is_admin = Column(Boolean, default=False)
     is_moderator = Column(Boolean, default=False)
 
-    # SISTEMA DE PAQUETES Y CRÉDITOS
     package_name = Column(String(50), default='Básico (Gratis)')
     prof_credits = Column(Integer, default=0)
     prem_credits = Column(Integer, default=0)
+    wallet_balance = Column(Numeric(10, 2), default=0.00)
 
-    # Auditoría
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login_at = Column(DateTime)
 
-    # Relaciones
     listings = relationship('Listing', back_populates='user')
     
-    # NOTA: La relación 'favorites' está deshabilitada hasta que se cree el modelo Favorite.
-    # favorites = relationship('Favorite', back_populates='user')
+    # ¡NUEVO! Ya descomentamos y activamos la relación de favoritos
+    favorites = relationship('Favorite', back_populates='user', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -66,8 +65,10 @@ class User(UserMixin, db.Model):
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
+            'account_type': self.account_type,
             'is_verified': self.is_verified,
             'reputation_score': float(self.reputation_score) if self.reputation_score else 0,
             'prof_credits': self.prof_credits,
-            'prem_credits': self.prem_credits
+            'prem_credits': self.prem_credits,
+            'wallet_balance': float(self.wallet_balance) if self.wallet_balance else 0.00
         }
