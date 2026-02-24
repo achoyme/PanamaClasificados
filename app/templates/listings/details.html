@@ -184,16 +184,6 @@
         </div>
     </div>
 
-    {% if listing.virtual_tour_url %}
-    <div class="mt-8 bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
-        <h2 class="font-black text-amazon-base text-lg mb-3 flex items-center gap-2">
-            <span class="material-icons-round text-blue-600">360</span> Recorrido Virtual 360°
-        </h2>
-        <div id="panorama" class="w-full h-[350px] md:h-[400px] rounded-lg overflow-hidden border-2 border-blue-100 cursor-move"></div>
-        <p class="text-xs text-gray-500 mt-2 text-center">Haz clic y arrastra sobre la imagen para mirar alrededor.</p>
-    </div>
-    {% endif %}
-
     <div class="mt-8 border border-gray-200 rounded-md">
         <div class="bg-gray-100 border-b border-gray-200 px-6 py-3">
             <h2 class="font-bold text-gray-900 text-lg">Descripción del artículo</h2>
@@ -342,28 +332,19 @@
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
-<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
-
 <script>
-    // ==========================================
     // INICIALIZADOR DEL MAPA INTERACTIVO
-    // ==========================================
     document.addEventListener("DOMContentLoaded", function() {
-        // Obtenemos la ubicación de la base de datos
         const distrito = "{{ listing.district }}";
         const provincia = "{{ listing.province }}";
         const query = `${distrito}, ${provincia}, Panama`;
 
-        // Centro geográfico de Panamá por defecto
         const map = L.map('location-map').setView([8.537981, -80.782066], 7);
         
-        // Cargamos los bloques del mapa desde OpenStreetMap (¡Gratis!)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Usamos la API de Nominatim para transformar el texto en coordenadas (Geocoding)
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
             .then(res => res.json())
             .then(data => {
@@ -371,38 +352,18 @@
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
                     
-                    // Centramos el mapa en el distrito
                     map.setView([lat, lon], 12);
 
-                    // Dibujamos un círculo de 2km de radio para mantener la privacidad
                     L.circle([lat, lon], {
-                        color: '#2563eb', // Borde azul
-                        fillColor: '#3b82f6', // Relleno azul
+                        color: '#2563eb',
+                        fillColor: '#3b82f6',
                         fillOpacity: 0.3,
                         radius: 2500 
                     }).addTo(map);
                 }
             })
-            .catch(err => console.log("No se pudo cargar la ubicación exacta en el mapa."));
+            .catch(err => console.log("No se pudo cargar la ubicación en el mapa."));
     });
-
-    // ==========================================
-    // TOUR VIRTUAL 360
-    // ==========================================
-    {% if listing.virtual_tour_url %}
-    document.addEventListener("DOMContentLoaded", function() {
-        pannellum.viewer('panorama', {
-            "type": "equirectangular",
-            "panorama": "{{ listing.virtual_tour_url }}",
-            "autoLoad": true,
-            "compass": true,
-            "showZoomCtrl": false,
-            "keyboardZoom": false,
-            "mouseZoom": false,
-            "autoRotate": -2
-        });
-    });
-    {% endif %}
 
     // Lógica del Lightbox de la Galería
     const galleryImages = [
