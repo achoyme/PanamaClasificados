@@ -1,12 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
-from app.models import Listing, Category, User, Image
+from app.models import Listing, Category, User, Image, Question # Importamos Question
 from app.services.listing_service import ListingService
 from app.utils.decorators import rate_limit
 from app import db
-
-# NUEVO: Importamos el escudo validador
 from app.forms import ListingValidatorForm
 
 listings_bp = Blueprint('listings', __name__, url_prefix='/listings')
@@ -40,6 +38,43 @@ def details(listing_id):
         return redirect(url_for('main.index'))
     return render_template('listings/details.html', listing=listing)
 
+# ==========================================
+# NUEVO: PREGUNTAS Y RESPUESTAS (MERCADOLIBRE)
+# ==========================================
+@listings_bp.route('/<int:listing_id>/ask', methods=['POST'])
+@login_required
+@rate_limit(limit=10, per_seconds=60)
+def ask_question(listing_id):
+    content = request.form.get('content')
+    if content:
+        question = Question(listing_id=listing_id, user_id=current_user.id, content=content)
+        db.session.add(question)
+        db.session.commit()
+        flash('¡Tu pregunta ha sido enviada! El vendedor te responderá pronto.', 'success')
+    return redirect(url_for('listings.details', listing_id=listing_id))
+
+@listings_bp.route('/question/<int:question_id>/answer', methods=['POST'])
+@login_required
+def answer_question(question_id):
+    question = Question.query.get_or_404(question_id)
+    
+    # Seguridad: Solo el dueño del anuncio puede responder
+    if question.listing.user_id != current_user.id:
+        flash('No tienes permiso para responder esta pregunta.', 'error')
+        return redirect(url_for('listings.details', listing_id=question.listing_id))
+    
+    answer = request.form.get('answer')
+    if answer:
+        question.answer = answer
+        question.answered_at = datetime.utcnow()
+        db.session.commit()
+        flash('Respuesta publicada exitosamente.', 'success')
+    
+    return redirect(url_for('listings.details', listing_id=question.listing_id))
+
+# ==========================================
+# MENSAJERÍA PRIVADA
+# ==========================================
 @listings_bp.route('/<int:listing_id>/contact', methods=['POST'])
 @rate_limit(limit=5, per_seconds=3600)
 def contact_seller(listing_id):
@@ -60,7 +95,6 @@ def contact_seller(listing_id):
         except Exception as e:
             db.session.rollback()
             flash(f'Error al enviar el mensaje. Intenta de nuevo.', 'error')
-            print(f"Error guardando mensaje: {e}")
             
     return redirect(url_for('listings.details', listing_id=listing_id))
 
@@ -71,17 +105,12 @@ def create():
     categories = Category.query.all()
     
     if request.method == 'POST':
-        # 1. Pasamos los datos por el escudo validador
         form = ListingValidatorForm(request.form)
-        
-        # 2. Si falla la validación, extraemos los errores y bloqueamos el guardado
         if not form.validate():
             for field, errors in form.errors.items():
-                for error in errors:
-                    flash(f"{error}", 'error')
+                for error in errors: flash(f"{error}", 'error')
             return render_template('listings/create.html', categories=categories, listing=None)
 
-        # 3. Si todo es correcto y seguro, procedemos
         data = request.form.to_dict()
         data['user_id'] = current_user.id
         images = request.files.getlist('images')
@@ -107,17 +136,12 @@ def edit(listing_id):
     categories = Category.query.all()
     
     if request.method == 'POST':
-        # 1. Pasamos los datos por el escudo validador
         form = ListingValidatorForm(request.form)
-        
-        # 2. Si falla la validación, bloqueamos la actualización
         if not form.validate():
             for field, errors in form.errors.items():
-                for error in errors:
-                    flash(f"{error}", 'error')
+                for error in errors: flash(f"{error}", 'error')
             return render_template('listings/create.html', categories=categories, listing=listing)
 
-        # 3. Si todo es correcto, guardamos
         data = request.form.to_dict()
         images = request.files.getlist('images')
         virtual_tour = request.files.get('virtual_tour') 
