@@ -180,7 +180,7 @@
         </div>
         <div id="location-map" class="w-full h-[300px] bg-gray-200 z-0"></div>
         <div class="px-6 py-3 bg-white text-xs text-gray-500">
-            <p><span class="font-bold text-gray-800">Zona:</span> {{ listing.district }}, {{ listing.province }}. <br>El área sombreada representa el distrito donde se encuentra el artículo para proteger la privacidad del vendedor.</p>
+            <p><span class="font-bold text-gray-800">Zona:</span> {{ listing.district }}, {{ listing.province }}. <br>El área sombreada representa el distrito o provincia donde se encuentra el artículo para proteger la privacidad del vendedor.</p>
         </div>
     </div>
 
@@ -231,7 +231,6 @@
                         <div class="flex items-start gap-3">
                             <span class="material-icons-round text-gray-300 mt-0.5 text-[20px]">chat_bubble_outline</span>
                             <div class="flex-1">
-                                
                                 <p class="text-[11px] text-gray-500 font-bold mb-0.5">
                                     {% if current_user.is_authenticated and current_user.id == listing.user_id %}
                                         <span class="text-blue-600">{{ q.user.first_name }} {{ q.user.last_name }}</span> (Comprador)
@@ -344,36 +343,63 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <script>
-    // INICIALIZADOR DEL MAPA INTERACTIVO
+    // ========================================================
+    // MAPA INTELIGENTE (GPS INCORPORADO PARA PANAMÁ)
+    // ========================================================
     document.addEventListener("DOMContentLoaded", function() {
-        const distrito = "{{ listing.district }}";
-        const provincia = "{{ listing.province }}";
-        const query = `${distrito}, ${provincia}, Panama`;
-
-        const map = L.map('location-map').setView([8.537981, -80.782066], 7);
+        const distrito = "{{ listing.district }}".toLowerCase().trim();
+        const provincia = "{{ listing.province }}".toLowerCase().trim();
         
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        // Diccionario GPS con las coordenadas exactas a prueba de fallos
+        const gpsPanama = {
+            "panamá": [8.9824, -79.5199], "panama": [8.9824, -79.5199],
+            "san miguelito": [9.0326, -79.5045],
+            "la chorrera": [8.8803, -79.7833],
+            "arraiján": [8.9490, -79.6601], "arraijan": [8.9490, -79.6601],
+            "panamá oeste": [8.8803, -79.7833], "panama oeste": [8.8803, -79.7833],
+            "david": [8.4270, -82.4312], "chiriquí": [8.4270, -82.4312], "chiriqui": [8.4270, -82.4312],
+            "colón": [9.3562, -79.9009], "colon": [9.3562, -79.9009],
+            "santiago": [8.0991, -80.9820], "veraguas": [8.0991, -80.9820],
+            "penonomé": [8.5209, -80.3559], "coclé": [8.5209, -80.3559], "cocle": [8.5209, -80.3559],
+            "chitré": [7.9628, -80.4287], "chitre": [7.9628, -80.4287], "herrera": [7.9628, -80.4287],
+            "las tablas": [7.7663, -80.2777], "los santos": [7.7663, -80.2777],
+            "bocas del toro": [9.3400, -82.2524],
+            "darién": [8.4093, -78.1465], "darien": [8.4093, -78.1465],
+            "boquete": [8.7800, -82.4308]
+        };
 
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
-                    
-                    map.setView([lat, lon], 12);
+        function drawMap(lat, lon, zoom) {
+            const map = L.map('location-map').setView([lat, lon], zoom);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+            L.circle([lat, lon], {
+                color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.3, radius: 2500 
+            }).addTo(map);
+        }
 
-                    L.circle([lat, lon], {
-                        color: '#2563eb',
-                        fillColor: '#3b82f6',
-                        fillOpacity: 0.3,
-                        radius: 2500 
-                    }).addTo(map);
-                }
-            })
-            .catch(err => console.log("No se pudo cargar la ubicación en el mapa."));
+        // 1. Intentamos con el distrito (Más preciso)
+        if (gpsPanama[distrito]) {
+            drawMap(gpsPanama[distrito][0], gpsPanama[distrito][1], 12);
+        } 
+        // 2. Si falla el distrito, intentamos con la provincia
+        else if (gpsPanama[provincia]) {
+            drawMap(gpsPanama[provincia][0], gpsPanama[provincia][1], 10);
+        } 
+        // 3. Si no está en nuestra lista, le preguntamos a la base de datos de internet
+        else {
+            const query = `${distrito}, ${provincia}, Panama`;
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        drawMap(parseFloat(data[0].lat), parseFloat(data[0].lon), 12);
+                    } else {
+                        // 4. Si internet falla o no encuentra nada, centramos en Panamá en general
+                        drawMap(8.5379, -80.7820, 7);
+                    }
+                }).catch(() => drawMap(8.5379, -80.7820, 7));
+        }
     });
 
     // Lógica del Lightbox de la Galería
