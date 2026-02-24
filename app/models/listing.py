@@ -18,7 +18,7 @@ class Listing(db.Model):
     condition = db.Column(db.String(50))
     is_negotiable = db.Column(db.Boolean, default=False)
     
-    # NUEVO: Atributos Dinámicos (JSON) para guardar Marca, Año, Habitaciones, etc.
+    # Atributos Dinámicos (JSON)
     attributes = db.Column(db.JSON)
 
     tier = db.Column(db.String(50), default='Gratis')
@@ -32,7 +32,10 @@ class Listing(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)
 
-    # Relaciones
+    # ==========================================
+    # RELACIONES (Aquí faltaba el usuario)
+    # ==========================================
+    user = db.relationship('User', back_populates='listings')
     category = db.relationship('Category', backref='listings')
     images = db.relationship('Image', backref='listing', cascade='all, delete-orphan', order_by='Image.display_order')
 
