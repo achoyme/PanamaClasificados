@@ -10,7 +10,6 @@
     </div>
 
     <div class="flex flex-col md:flex-row gap-10">
-        
         <div class="w-full md:w-1/2 lg:w-5/12">
             <div class="bg-gray-50 border border-gray-200 rounded-md overflow-hidden relative group cursor-pointer aspect-square flex items-center justify-center p-2 mb-4" onclick="openLightbox(currentMainIndex)">
                 <img id="main-image" src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/800x800?text=Sin+Imagen' }}" alt="Imagen principal de {{ listing.title }}" onerror="this.onerror=null; this.src='https://placehold.co/800x800?text=Sin+Imagen';" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
@@ -63,18 +62,18 @@
                             {% else %}
                                 <button onclick="document.getElementById('contact-modal').classList.remove('hidden')" class="flex items-center justify-center w-full bg-gray-800 hover:bg-gray-900 text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
                                     <span class="material-icons-round text-[20px]">email</span>
-                                    Enviar Mensaje Interno
+                                    Mensaje Privado (Directo)
                                 </button>
 
                                 {% if current_user.is_authenticated %}
                                 <a href="https://wa.me/507{{ listing.user.phone_number | default('60000000', true) | replace('-', '') | replace(' ', '') }}?text=Hola,%20vi%20tu%20anuncio%20en%20Panama%20Classifieds:%20{{ listing.title }}.%20¿Aún%20está%20disponible?" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
                                     <span class="material-icons-round text-[20px]">chat</span>
-                                    Contactar por WhatsApp
+                                    WhatsApp
                                 </a>
                                 {% else %}
                                 <a href="{{ url_for('auth.login') }}" class="flex items-center justify-center w-full bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2 text-sm">
                                     <span class="material-icons-round text-[20px] text-gray-400">lock</span>
-                                    Inicia sesión para ver su WhatsApp
+                                    Inicia sesión para WhatsApp
                                 </a>
                                 {% endif %}
                             {% endif %}
@@ -145,16 +144,6 @@
         </div>
     </div>
 
-    {% if listing.virtual_tour_url %}
-    <div class="mt-8 bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
-        <h2 class="font-black text-amazon-base text-lg mb-3 flex items-center gap-2">
-            <span class="material-icons-round text-blue-600">360</span> Recorrido Virtual 360°
-        </h2>
-        <div id="panorama" class="w-full h-[350px] md:h-[400px] rounded-lg overflow-hidden border-2 border-blue-100 cursor-move"></div>
-        <p class="text-xs text-gray-500 mt-2 text-center">Haz clic y arrastra sobre la imagen para mirar alrededor.</p>
-    </div>
-    {% endif %}
-
     {% if listing.attributes and listing.attributes|length > 0 %}
     <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden">
         <div class="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center gap-2">
@@ -164,7 +153,8 @@
         <div class="p-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
                 {% for key, value in listing.attributes.items() %}
-                    {% if value %} <div class="bg-white p-3 border border-gray-100 rounded shadow-sm">
+                    {% if value %}
+                    <div class="bg-white p-3 border border-gray-100 rounded shadow-sm">
                         <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">{{ key | replace('_', ' ') }}</p>
                         <p class="text-sm font-black text-gray-900 capitalize">{{ value }}
                             {% if key == 'kilometraje' %} Km {% elif key == 'metros_cuadrados' %} m² {% endif %}
@@ -174,6 +164,16 @@
                 {% endfor %}
             </div>
         </div>
+    </div>
+    {% endif %}
+
+    {% if listing.virtual_tour_url %}
+    <div class="mt-8 bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+        <h2 class="font-black text-amazon-base text-lg mb-3 flex items-center gap-2">
+            <span class="material-icons-round text-blue-600">360</span> Recorrido Virtual 360°
+        </h2>
+        <div id="panorama" class="w-full h-[350px] md:h-[400px] rounded-lg overflow-hidden border-2 border-blue-100 cursor-move"></div>
+        <p class="text-xs text-gray-500 mt-2 text-center">Haz clic y arrastra sobre la imagen para mirar alrededor.</p>
     </div>
     {% endif %}
 
@@ -187,6 +187,74 @@
             <div class="mt-10 p-4 bg-gray-50 border border-gray-200 text-xs text-gray-600 leading-relaxed max-w-4xl rounded">
                 <span class="font-bold text-gray-800 block mb-1">Aviso de responsabilidad:</span>
                 Panama Classifieds funciona exclusivamente como un catálogo visual. Las direcciones de entrega, pagos y garantías deben ser acordadas entre comprador y vendedor. Recomendamos reunirse en lugares públicos seguros.
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 border border-gray-200 rounded-md bg-white">
+        <div class="bg-gray-100 border-b border-gray-200 px-6 py-3">
+            <h2 class="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <span class="material-icons-round text-blue-600">forum</span> Preguntas y Respuestas
+            </h2>
+        </div>
+        <div class="p-6 md:p-8">
+            
+            {% if current_user.is_authenticated %}
+                {% if current_user.id != listing.user_id %}
+                <div class="mb-10">
+                    <h3 class="font-bold text-gray-900 mb-2">Pregúntale al vendedor</h3>
+                    <form action="{{ url_for('listings.ask_question', listing_id=listing.id) }}" method="POST" class="flex gap-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="content" required placeholder="Escribe tu pregunta aquí... Ej: ¿Aún está disponible?" class="flex-1 px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-600 outline-none text-sm">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-bold transition-colors shadow-sm">Preguntar</button>
+                    </form>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="mb-10 p-4 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 flex items-center gap-2">
+                    <span class="material-icons-round">info</span>
+                    <span><a href="{{ url_for('auth.login') }}" class="font-black hover:underline">Inicia sesión</a> o <a href="{{ url_for('auth.register') }}" class="font-black hover:underline">regístrate</a> para hacerle una pregunta pública al vendedor.</span>
+                </div>
+            {% endif %}
+
+            <div class="space-y-6">
+                {% if listing.questions and listing.questions.count() > 0 %}
+                    <h3 class="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Últimas preguntas</h3>
+                    {% for q in listing.questions %}
+                    <div class="pb-2">
+                        <div class="flex items-start gap-3">
+                            <span class="material-icons-round text-gray-300 mt-0.5 text-[20px]">chat_bubble_outline</span>
+                            <div class="flex-1">
+                                <p class="text-gray-900 text-sm font-medium">{{ q.content }}</p>
+                                
+                                {% if q.answer %}
+                                <div class="mt-2 flex items-start gap-2 ml-1 border-l-2 border-gray-200 pl-4">
+                                    <span class="material-icons-round text-gray-400 text-[18px] transform rotate-180">subdirectory_arrow_right</span>
+                                    <div>
+                                        <p class="text-gray-600 text-sm">{{ q.answer }}</p>
+                                        <p class="text-[10px] text-gray-400 mt-1 font-bold">{{ q.answered_at.strftime('%d/%m/%Y') }}</p>
+                                    </div>
+                                </div>
+                                {% else %}
+                                    {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                                    <form action="{{ url_for('listings.answer_question', question_id=q.id) }}" method="POST" class="mt-3 flex gap-2 ml-4">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="answer" required placeholder="Escribe tu respuesta pública..." class="flex-1 px-3 py-2 border border-blue-300 rounded text-sm focus:ring-1 focus:ring-blue-600 outline-none bg-blue-50">
+                                        <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded text-xs font-bold transition-colors">Responder</button>
+                                    </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8 text-gray-400">
+                        <span class="material-icons-round text-4xl mb-2">forum</span>
+                        <p class="text-sm font-bold">Nadie ha hecho preguntas todavía.</p>
+                        <p class="text-xs mt-1">¡Sé el primero en consultar al vendedor!</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -205,9 +273,7 @@
     <button onclick="nextImage(event)" class="absolute right-2 md:right-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group">
         <span class="material-icons-round text-6xl md:text-7xl drop-shadow-xl group-hover:translate-x-1 transition-transform">chevron_right</span>
     </button>
-    <div id="lightbox-counter" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm font-bold tracking-widest px-6 py-2 rounded-full backdrop-blur-sm border border-white/10">
-        1 / 1
-    </div>
+    <div id="lightbox-counter" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm font-bold tracking-widest px-6 py-2 rounded-full backdrop-blur-sm border border-white/10">1 / 1</div>
 </div>
 
 <div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -229,14 +295,14 @@
 <div id="contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
     <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
         <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-            <h2 class="text-xl font-bold text-gray-900">Contactar al Vendedor</h2>
+            <h2 class="text-xl font-bold text-gray-900">Contactar al Vendedor Privado</h2>
             <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-800"><span class="material-icons-round">close</span></button>
         </div>
         <form action="{{ url_for('listings.contact_seller', listing_id=listing.id) }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div>
                 <label class="block text-xs font-bold text-gray-700 mb-1">Tu Nombre</label>
-                <input type="text" name="buyer_name" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Ej. Juan Pérez">
+                <input type="text" name="buyer_name" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -244,12 +310,12 @@
                     <input type="email" name="buyer_email" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Tu Celular (Opcional)</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tu Celular</label>
                     <input type="tel" name="buyer_phone" class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje</label>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje Privado</label>
                 <textarea name="buyer_message" rows="3" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500"></textarea>
             </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-bold transition-colors shadow-sm">Enviar Mensaje Seguro</button>
