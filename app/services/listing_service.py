@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timedelta
 from app import db
-from app.models import Listing, Image, AIAnalysis, User
+from app.models import Listing, Image, AIAnalysis, User, Category
 from app.services.image_service import ImageService
 from app.ai.image_analysis import ImageAnalysisService
 from app.ai.text_analysis import TextAnalysisService
@@ -42,16 +42,18 @@ class ListingService:
 
             is_negotiable_bool = str(data.get('is_negotiable', '')).lower() in ['true', 'on', '1']
 
-            # Lógica para capturar atributos dinámicos (Autos o Casas)
-            cat_id = str(data.get('category_id'))
+            # CORRECCIÓN: Leemos el nombre de la categoría en lugar de adivinar el ID
+            category = Category.query.get(data['category_id'])
+            cat_name = category.name.lower() if category else ''
+
             dynamic_attrs = {}
-            if cat_id == '2':  # Vehículos
+            if 'auto' in cat_name or 'vehículo' in cat_name or 'vehiculo' in cat_name or 'motor' in cat_name:
                 dynamic_attrs['marca'] = self._sanitize(data.get('attr_marca', ''))
                 dynamic_attrs['modelo'] = self._sanitize(data.get('attr_modelo', ''))
                 dynamic_attrs['ano'] = self._sanitize(data.get('attr_ano', ''))
                 dynamic_attrs['kilometraje'] = self._sanitize(data.get('attr_kilometraje', ''))
                 dynamic_attrs['transmision'] = self._sanitize(data.get('attr_transmision', ''))
-            elif cat_id == '3':  # Inmuebles
+            elif 'inmueble' in cat_name or 'bienes' in cat_name or 'raíces' in cat_name or 'raices' in cat_name or 'casa' in cat_name:
                 dynamic_attrs['habitaciones'] = self._sanitize(data.get('attr_habitaciones', ''))
                 dynamic_attrs['banos'] = self._sanitize(data.get('attr_banos', ''))
                 dynamic_attrs['metros_cuadrados'] = self._sanitize(data.get('attr_metros', ''))
@@ -114,16 +116,18 @@ class ListingService:
             listing.expires_at = datetime.utcnow() + timedelta(days=listing.duration_days)
             listing.status = 'Active' 
 
-            # Actualizar atributos dinámicos
-            cat_id = str(data.get('category_id'))
+            # CORRECCIÓN: Leemos el nombre de la categoría para actualizar los atributos correctos
+            category = Category.query.get(data['category_id'])
+            cat_name = category.name.lower() if category else ''
+
             dynamic_attrs = {}
-            if cat_id == '2':
+            if 'auto' in cat_name or 'vehículo' in cat_name or 'vehiculo' in cat_name or 'motor' in cat_name:
                 dynamic_attrs['marca'] = self._sanitize(data.get('attr_marca', ''))
                 dynamic_attrs['modelo'] = self._sanitize(data.get('attr_modelo', ''))
                 dynamic_attrs['ano'] = self._sanitize(data.get('attr_ano', ''))
                 dynamic_attrs['kilometraje'] = self._sanitize(data.get('attr_kilometraje', ''))
                 dynamic_attrs['transmision'] = self._sanitize(data.get('attr_transmision', ''))
-            elif cat_id == '3':
+            elif 'inmueble' in cat_name or 'bienes' in cat_name or 'raíces' in cat_name or 'raices' in cat_name or 'casa' in cat_name:
                 dynamic_attrs['habitaciones'] = self._sanitize(data.get('attr_habitaciones', ''))
                 dynamic_attrs['banos'] = self._sanitize(data.get('attr_banos', ''))
                 dynamic_attrs['metros_cuadrados'] = self._sanitize(data.get('attr_metros', ''))
