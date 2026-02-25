@@ -9,12 +9,12 @@ from app.utils.decorators import rate_limit
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 def sanitize_input(text):
-    """Sanitiza entrada de usuario para evitar inyección de código"""
-    if not text: return ''
-    return re.sub(r'<[^>]*>', '', str(text).strip())[:255]
+    """Sanitiza entrada de usuario para evitar inyección de código""" [cite: 207, 208]
+    if not text: return '' [cite: 209]
+    return re.sub(r'<[^>]*>', '', str(text).strip())[:255] [cite: 210]
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@rate_limit(limit=5, per_seconds=300) # Máximo 5 intentos cada 5 minutos
+@rate_limit(limit=5, per_seconds=300) # Máximo 5 intentos cada 5 minutos [cite: 242]
 def login():
     if request.method == 'POST':
         email = sanitize_input(request.form.get('email', '')).lower()
@@ -36,12 +36,12 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page if next_page else url_for('main.index'))
         else:
-            flash('Correo o contraseña incorrectos.', 'error')
+            flash('Correo o contraseña incorrectos.', 'error') [cite: 257]
 
     return render_template('auth/login.html')
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@rate_limit(limit=5, per_seconds=3600)
+@rate_limit(limit=5, per_seconds=3600) [cite: 212]
 def register():
     if request.method == 'POST':
         first_name = sanitize_input(request.form.get('first_name', ''))
@@ -49,19 +49,19 @@ def register():
         email = sanitize_input(request.form.get('email', '')).lower()
         password = request.form.get('password', '')
 
-        # Validar formato de email real
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(email_pattern, email):
-            flash('Formato de correo electrónico inválido.', 'error')
+        # Validar formato de email real [cite: 221]
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' [cite: 222]
+        if not re.match(email_pattern, email): [cite: 223]
+            flash('Formato de correo electrónico inválido.', 'error') [cite: 224]
             return redirect(url_for('auth.register'))
 
-        # Validar contraseña simple (Como pediste, ignorando el informe estricto)
+        # Validar contraseña simple
         if len(password) < 6:
             flash('La contraseña debe tener al menos 6 caracteres.', 'error')
             return redirect(url_for('auth.register'))
 
-        if User.query.filter_by(email=email).first():
-            flash('El correo electrónico ya está registrado.', 'error')
+        if User.query.filter_by(email=email).first(): [cite: 227]
+            flash('El correo electrónico ya está registrado.', 'error') [cite: 228]
             return redirect(url_for('auth.register'))
 
         new_user = User(
