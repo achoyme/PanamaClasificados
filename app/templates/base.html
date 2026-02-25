@@ -10,22 +10,24 @@
             theme: {
                 extend: {
                     colors: {
-                        // NUEVA PALETA DE COLORES DE PANAMÁ (Auditoría)
+                        // PALETA PANAMÁ "CLEAN"
                         panama: {
-                            blue: '#2B4C7E',      // Azul profundo Confianza
-                            'blue-light': '#5B8CB8',
-                            red: '#C75B5B',       // Rojo coral
-                            white: '#F8FAFC',
-                            gold: '#D4A84B',      // Dorado
-                            gray: '#64748B'
+                            blue: '#1A365D',      // Azul profundo (Textos y Nav)
+                            'blue-light': '#F0F4F8', // Fondo sutil azulado
+                            red: '#E11D48',       // Rojo coral (Botones principales)
+                            'red-hover': '#BE123C',
+                            gold: '#D97706',      // Dorado / Naranja Premium
+                            'gold-hover': '#B45309',
+                            white: '#FFFFFF',     // Blanco absoluto
+                            gray: '#64748B'       // Textos secundarios
                         },
-                        // Mantenemos tus variables amazon para no romper el resto de la web
+                        // Para evitar romper otros de tus botones:
                         amazon: {
-                            base: '#131921',
-                            light: '#232f3e',
-                            accent: '#febd69',
-                            hover: '#f3a847',
-                            bg: '#eaeded'
+                            base: '#1A365D',   
+                            light: '#F8FAFC',
+                            accent: '#D97706',
+                            hover: '#B45309',
+                            bg: '#F8FAFC' // Fondo general de la app muy claro
                         }
                     }
                 }
@@ -35,58 +37,58 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-panama-white text-gray-900 min-h-screen flex flex-col font-sans">
+<body class="bg-amazon-bg text-gray-900 min-h-screen flex flex-col font-sans">
     
-    <div class="bg-amazon-light text-gray-300 text-xs hidden md:block border-b border-gray-700">
+    <div class="bg-white text-gray-500 text-xs hidden md:block border-b border-gray-200">
         <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
             <div class="flex items-center gap-4">
                 {% if current_user.is_authenticated %}
-                    <span>¡Hola, <span class="font-bold text-white">{{ current_user.first_name }}</span>!</span>
-                    <a href="{{ url_for('main.edit_profile') }}" class="hover:text-white text-amazon-accent font-bold transition-colors">Mi Perfil</a>
-                    <a href="{{ url_for('main.wallet') }}" class="hover:text-white text-green-400 font-bold transition-colors">Billetera ($)</a>
+                    <span>¡Hola, <span class="font-bold text-panama-blue">{{ current_user.first_name }}</span>!</span>
+                    <a href="{{ url_for('main.edit_profile') }}" class="hover:text-panama-blue font-bold transition-colors">Mi Perfil</a>
+                    <a href="{{ url_for('main.wallet') }}" class="hover:text-panama-blue text-green-600 font-bold transition-colors">Billetera ($)</a>
                 {% else %}
-                    <span>¡Hola! <a href="{{ url_for('auth.login') }}" class="text-amazon-accent hover:underline font-bold">Inicia sesión</a> o <a href="{{ url_for('auth.register') }}" class="text-amazon-accent hover:underline font-bold">regístrate</a></span>
+                    <span>¡Hola! <a href="{{ url_for('auth.login') }}" class="text-panama-blue hover:underline font-bold">Inicia sesión</a> o <a href="{{ url_for('auth.register') }}" class="text-panama-blue hover:underline font-bold">regístrate</a></span>
                 {% endif %}
-                <a href="{{ url_for('listings.index') }}" class="hover:text-white transition-colors">Explorar Anuncios</a>
-                <a href="#" class="hover:text-white transition-colors">Ayuda y contacto</a>
+                <a href="{{ url_for('listings.index') }}" class="hover:text-panama-blue transition-colors">Explorar Anuncios</a>
+                <a href="#" class="hover:text-panama-blue transition-colors">Ayuda</a>
             </div>
             <div class="flex items-center gap-4">
-                <a href="{{ url_for('listings.create') }}" class="font-bold text-white hover:text-amazon-accent transition-colors">Vender</a>
+                <a href="{{ url_for('listings.create') }}" class="font-bold text-panama-red hover:text-panama-red-hover transition-colors">Vender artículo</a>
                 
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('listings.my_listings') }}" class="hover:text-white transition-colors">Mis Anuncios</a>
+                <a href="{{ url_for('listings.my_listings') }}" class="hover:text-panama-blue transition-colors">Mis Anuncios</a>
                 
-                <a href="{{ url_for('main.inbox') }}" class="hover:text-white transition-colors flex items-center gap-1 font-bold text-amazon-accent">
+                <a href="{{ url_for('main.inbox') }}" class="hover:text-panama-blue transition-colors flex items-center gap-1 font-bold text-panama-blue">
                     <span class="material-icons-round text-[16px]">mail</span> Mensajes
                 </a>
                 
-                <a href="{{ url_for('main.pricing') }}" class="bg-amazon-base border border-gray-600 rounded px-2 py-1 flex items-center gap-2 hover:border-amazon-accent transition-colors" title="Comprar más créditos">
-                    <span class="text-yellow-400 font-bold flex items-center"><span class="material-icons-round text-[14px]">star</span>{{ current_user.prem_credits }}</span>
-                    <span class="text-blue-400 font-bold flex items-center"><span class="material-icons-round text-[14px]">check_circle</span>{{ current_user.prof_credits }}</span>
+                <a href="{{ url_for('main.pricing') }}" class="bg-panama-blue-light border border-gray-200 rounded px-2 py-1 flex items-center gap-2 hover:border-gray-300 transition-colors" title="Comprar más créditos">
+                    <span class="text-panama-gold font-bold flex items-center"><span class="material-icons-round text-[14px]">star</span>{{ current_user.prem_credits }}</span>
+                    <span class="text-panama-blue font-bold flex items-center"><span class="material-icons-round text-[14px]">check_circle</span>{{ current_user.prof_credits }}</span>
                 </a>
 
                 {% if current_user.is_moderator %}
-                    <a href="{{ url_for('reports.moderation') }}" class="text-red-400 font-bold hover:text-red-300">Moderación</a>
+                    <a href="{{ url_for('reports.moderation') }}" class="text-red-600 font-bold hover:text-red-800">Moderación</a>
                 {% endif %}
-                <a href="{{ url_for('auth.logout') }}" class="hover:text-white text-gray-400 transition-colors">Salir</a>
+                <a href="{{ url_for('auth.logout') }}" class="hover:text-panama-red text-gray-400 transition-colors">Salir</a>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <header class="bg-panama-blue sticky top-0 z-50 py-3 shadow-md border-b-4 border-panama-red">
+    <header class="bg-white sticky top-0 z-50 py-4 shadow-sm border-b border-gray-200">
         <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-4 md:gap-6">
             
-            <a href="{{ url_for('main.index') }}" class="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-1 flex-shrink-0 focus:outline-none">
-                <span class="material-icons-round text-panama-gold text-3xl">storefront</span>
-                Panama<span class="font-normal text-panama-blue-light">Classifieds</span>
+            <a href="{{ url_for('main.index') }}" class="text-2xl md:text-3xl font-black text-panama-blue tracking-tight flex items-center gap-1 flex-shrink-0 focus:outline-none group">
+                <span class="material-icons-round text-panama-red text-3xl group-hover:scale-110 transition-transform">storefront</span>
+                Panama<span class="font-normal text-panama-gold">Classifieds</span>
             </a>
 
             <div class="flex-1 w-full flex justify-center">
-                <form action="{{ url_for('listings.index') }}" method="GET" class="flex w-full max-w-4xl h-11 rounded overflow-hidden focus-within:ring-2 focus-within:ring-panama-gold shadow-sm">
-                    <div class="hidden md:block bg-gray-100 border-r border-gray-300 hover:bg-gray-200 transition-colors">
-                        <select name="category_id" title="Seleccionar categoría" aria-label="Seleccionar categoría" class="h-full py-0 pl-3 pr-8 bg-transparent text-gray-700 text-sm focus:ring-0 cursor-pointer outline-none border-none font-medium">
-                            <option value="">Todas las categorías</option>
+                <form action="{{ url_for('listings.index') }}" method="GET" class="flex w-full max-w-4xl h-12 rounded-lg overflow-hidden border-2 border-gray-200 focus-within:border-panama-blue focus-within:ring-2 focus-within:ring-panama-blue/20 shadow-sm transition-all">
+                    <div class="hidden md:block bg-gray-50 border-r border-gray-200 hover:bg-gray-100 transition-colors">
+                        <select name="category_id" title="Seleccionar categoría" aria-label="Seleccionar categoría" class="h-full py-0 pl-4 pr-8 bg-transparent text-gray-700 text-sm focus:ring-0 cursor-pointer outline-none border-none font-bold">
+                            <option value="">Todo el Catálogo</option>
                             <option value="1">Electrónica</option>
                             <option value="2">Bienes Raíces</option>
                             <option value="3">Vehículos</option>
@@ -94,36 +96,43 @@
                             <option value="5">Hogar</option>
                         </select>
                     </div>
-                    <input type="text" name="search" placeholder="Buscar productos, marcas y más..." title="Buscar artículos" aria-label="Buscar artículos" value="{{ request.args.get('search', '') }}" class="flex-1 px-4 text-black border-none focus:ring-0 outline-none text-base">
-                    <button type="submit" class="bg-panama-red hover:bg-red-700 text-white px-6 font-bold transition-colors flex items-center justify-center">
+                    <input type="text" name="search" placeholder="¿Qué buscas en Panamá?" title="Buscar artículos" aria-label="Buscar artículos" value="{{ request.args.get('search', '') }}" class="flex-1 px-4 text-gray-900 border-none focus:ring-0 outline-none text-base bg-white">
+                    <button type="submit" class="bg-panama-blue hover:bg-panama-blue/90 text-white px-8 font-bold transition-colors flex items-center justify-center">
                         <span class="material-icons-round">search</span>
                     </button>
                 </form>
             </div>
             
-            <div class="md:hidden flex w-full justify-between items-center text-white text-sm font-bold mt-2 px-2">
-                <a href="{{ url_for('listings.create') }}" class="flex items-center gap-1 text-panama-gold"><span class="material-icons-round text-base">add_circle</span> Vender</a>
+            <div class="md:hidden flex w-full justify-between items-center text-panama-blue text-sm font-bold mt-2 px-2">
+                <a href="{{ url_for('listings.create') }}" class="flex items-center gap-1 text-panama-red"><span class="material-icons-round text-base">add_circle</span> Vender</a>
                 {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.login') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">person</span> Ingresar</a>
                 {% else %}
-                <a href="{{ url_for('main.wallet') }}" class="flex items-center gap-1 text-green-400"><span class="material-icons-round text-base">account_balance_wallet</span></a>
-                <a href="{{ url_for('main.inbox') }}" class="flex items-center gap-1 text-panama-gold"><span class="material-icons-round text-base">mail</span></a>
+                <a href="{{ url_for('main.wallet') }}" class="flex items-center gap-1 text-green-600"><span class="material-icons-round text-base">account_balance_wallet</span></a>
+                <a href="{{ url_for('main.inbox') }}" class="flex items-center gap-1 text-panama-blue"><span class="material-icons-round text-base">mail</span></a>
                 <a href="{{ url_for('main.edit_profile') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">manage_accounts</span></a>
                 <a href="{{ url_for('listings.my_listings') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">inventory</span></a>
                 {% endif %}
+            </div>
+
+            <div class="hidden md:block">
+                 <a href="{{ url_for('listings.create') }}" class="bg-panama-red hover:bg-panama-red-hover text-white px-6 py-2.5 rounded-lg font-black text-sm shadow-md transition-all flex items-center gap-2 transform hover:-translate-y-0.5">
+                    <span class="material-icons-round text-[20px]">add_photo_alternate</span>
+                    Publicar Gratis
+                </a>
             </div>
         </div>
     </header>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
                 {% for category, message in messages %}
-                <div class="p-4 mb-4 text-sm rounded-lg flex items-center gap-2 font-bold
-                    {% if category == 'error' %} bg-red-100 text-red-800 border border-red-200
-                    {% elif category == 'success' %} bg-green-100 text-green-800 border border-green-200
-                    {% elif category == 'warning' %} bg-yellow-100 text-yellow-800 border border-yellow-200
-                    {% else %} bg-blue-100 text-blue-800 border border-blue-200 {% endif %}">
+                <div class="p-4 mb-4 text-sm rounded-lg flex items-center gap-2 font-bold shadow-sm
+                    {% if category == 'error' %} bg-red-50 text-red-700 border border-red-200
+                    {% elif category == 'success' %} bg-green-50 text-green-700 border border-green-200
+                    {% elif category == 'warning' %} bg-orange-50 text-orange-700 border border-orange-200
+                    {% else %} bg-blue-50 text-panama-blue border border-blue-200 {% endif %}">
                     <span class="material-icons-round">info</span> {{ message }}
                 </div>
                 {% endfor %}
@@ -131,42 +140,42 @@
         {% endif %}
     {% endwith %}
 
-    <main class="flex-1 w-full mx-auto">
+    <main class="flex-1 w-full mx-auto pb-12">
         {% block content %}{% endblock %}
     </main>
     
-    <footer class="bg-panama-blue text-white py-10 mt-auto border-t-4 border-panama-gold">
+    <footer class="bg-white border-t border-gray-200 py-12 mt-auto">
         <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-sm">
                 <div>
-                    <h3 class="font-bold mb-3 text-panama-gold">Comprar</h3>
-                    <ul class="space-y-2 text-gray-300">
-                        <li><a href="{{ url_for('auth.register') }}" class="hover:underline">Crear cuenta</a></li>
-                        <li><a href="{{ url_for('listings.index') }}" class="hover:underline">Explorar anuncios</a></li>
+                    <h3 class="font-black mb-4 text-panama-blue uppercase tracking-wider text-xs">Comprar</h3>
+                    <ul class="space-y-3 text-gray-600 font-medium">
+                        <li><a href="{{ url_for('auth.register') }}" class="hover:text-panama-red transition-colors">Crear cuenta</a></li>
+                        <li><a href="{{ url_for('listings.index') }}" class="hover:text-panama-red transition-colors">Explorar anuncios</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-3 text-panama-gold">Vender</h3>
-                    <ul class="space-y-2 text-gray-300">
-                        <li><a href="{{ url_for('listings.create') }}" class="hover:underline">Publicar un artículo</a></li>
-                        <li><a href="{{ url_for('main.pricing') }}" class="hover:underline">Paquetes y Tarifas</a></li>
+                    <h3 class="font-black mb-4 text-panama-blue uppercase tracking-wider text-xs">Vender</h3>
+                    <ul class="space-y-3 text-gray-600 font-medium">
+                        <li><a href="{{ url_for('listings.create') }}" class="hover:text-panama-red transition-colors">Publicar un artículo</a></li>
+                        <li><a href="{{ url_for('main.pricing') }}" class="hover:text-panama-red transition-colors">Paquetes y Tarifas</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-3 text-panama-gold">Acerca de Nosotros</h3>
-                    <ul class="space-y-2 text-gray-300">
-                        <li><a href="{{ url_for('main.privacy') }}" class="hover:underline">Política de Privacidad</a></li>
-                        <li><a href="#" class="hover:underline">Términos y condiciones</a></li>
+                    <h3 class="font-black mb-4 text-panama-blue uppercase tracking-wider text-xs">Nosotros</h3>
+                    <ul class="space-y-3 text-gray-600 font-medium">
+                        <li><a href="{{ url_for('main.privacy') }}" class="hover:text-panama-red transition-colors">Política de Privacidad</a></li>
+                        <li><a href="#" class="hover:text-panama-red transition-colors">Términos y condiciones</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-3 text-panama-gold">Ayuda</h3>
-                    <ul class="space-y-2 text-gray-300">
-                        <li><a href="#" class="hover:underline">Soporte técnico</a></li>
+                    <h3 class="font-black mb-4 text-panama-blue uppercase tracking-wider text-xs">Ayuda</h3>
+                    <ul class="space-y-3 text-gray-600 font-medium">
+                        <li><a href="#" class="hover:text-panama-red transition-colors">Soporte técnico</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-panama-blue-light pt-6 text-center text-xs text-gray-300">
+            <div class="border-t border-gray-100 pt-8 text-center text-xs text-gray-400 font-bold">
                 <p>Copyright &copy; 2026 Panama Classifieds. Proyecto con Arquitectura Híbrida.</p>
             </div>
         </div>
