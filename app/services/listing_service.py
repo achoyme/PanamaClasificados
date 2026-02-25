@@ -9,6 +9,7 @@ from app.ai.category_prediction import CategoryPredictionService
 from app.ai.price_prediction import PricePredictionService
 from app.ai.fraud_detection import FraudDetectionService
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 
 class ListingService:
     def __init__(self):
@@ -42,7 +43,7 @@ class ListingService:
 
             is_negotiable_bool = str(data.get('is_negotiable', '')).lower() in ['true', 'on', '1']
 
-            # CORRECCIÓN: Leemos el nombre de la categoría en lugar de adivinar el ID
+            # Lectura del nombre de la categoría para no fallar
             category = Category.query.get(data['category_id'])
             cat_name = category.name.lower() if category else ''
 
@@ -116,7 +117,6 @@ class ListingService:
             listing.expires_at = datetime.utcnow() + timedelta(days=listing.duration_days)
             listing.status = 'Active' 
 
-            # CORRECCIÓN: Leemos el nombre de la categoría para actualizar los atributos correctos
             category = Category.query.get(data['category_id'])
             cat_name = category.name.lower() if category else ''
 
@@ -191,9 +191,18 @@ class ListingService:
             joinedload(Listing.user)
         ).filter(Listing.status.in_(['Active', 'Sold']), Listing.expires_at > now)
         
-        if filters.get('search_term'):
-            term = self._sanitize(filters['search_term'])
-            query = query.filter(Listing.title.ilike(f"%{term}%"))
+        # Búsqueda Full-Text rápida y poderosa en PostgreSQL
+        search_term = filters.get('search_term', '').strip()
+        if search_term:
+            sanitized_term = re.sub(r"[^\w\s]", "", search_term)
+            if sanitized_term:
+                search_vector = func.to_tsvector('spanish', Listing.title + ' ' + Listing.description)
+                search_query = func.plainto_tsquery('spanish', sanitized_term)
+                query = query.filter(search_vector.op('@@')(search_query))
+                query = query.order_by(func.ts_rank(search_vector, search_query).desc())
+        else:
+            query = query.order_by(Listing.created_at.desc())
+
         if filters.get('province'):
             query = query.filter(Listing.province.ilike(f"%{self._sanitize(filters['province'])}%"))
         if filters.get('district'):
@@ -201,7 +210,7 @@ class ListingService:
         if filters.get('category_id'):
             query = query.filter(Listing.category_id == filters['category_id'])
             
-        pagination = query.order_by(Listing.created_at.desc()).paginate(
+        pagination = query.paginate(
             page=filters.get('page', 1), per_page=20, error_out=False
         )
         
