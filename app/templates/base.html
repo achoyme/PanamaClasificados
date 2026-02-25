@@ -10,6 +10,16 @@
             theme: {
                 extend: {
                     colors: {
+                        // NUEVA PALETA DE COLORES DE PANAMÁ (Auditoría)
+                        panama: {
+                            blue: '#2B4C7E',      // Azul profundo Confianza
+                            'blue-light': '#5B8CB8',
+                            red: '#C75B5B',       // Rojo coral
+                            white: '#F8FAFC',
+                            gold: '#D4A84B',      // Dorado
+                            gray: '#64748B'
+                        },
+                        // Mantenemos tus variables amazon para no romper el resto de la web
                         amazon: {
                             base: '#131921',
                             light: '#232f3e',
@@ -25,13 +35,15 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-amazon-bg text-gray-900 min-h-screen flex flex-col font-sans">
+<body class="bg-panama-white text-gray-900 min-h-screen flex flex-col font-sans">
     
     <div class="bg-amazon-light text-gray-300 text-xs hidden md:block border-b border-gray-700">
         <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
             <div class="flex items-center gap-4">
                 {% if current_user.is_authenticated %}
                     <span>¡Hola, <span class="font-bold text-white">{{ current_user.first_name }}</span>!</span>
+                    <a href="{{ url_for('main.edit_profile') }}" class="hover:text-white text-amazon-accent font-bold transition-colors">Mi Perfil</a>
+                    <a href="{{ url_for('main.wallet') }}" class="hover:text-white text-green-400 font-bold transition-colors">Billetera ($)</a>
                 {% else %}
                     <span>¡Hola! <a href="{{ url_for('auth.login') }}" class="text-amazon-accent hover:underline font-bold">Inicia sesión</a> o <a href="{{ url_for('auth.register') }}" class="text-amazon-accent hover:underline font-bold">regístrate</a></span>
                 {% endif %}
@@ -43,6 +55,10 @@
                 
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('listings.my_listings') }}" class="hover:text-white transition-colors">Mis Anuncios</a>
+                
+                <a href="{{ url_for('main.inbox') }}" class="hover:text-white transition-colors flex items-center gap-1 font-bold text-amazon-accent">
+                    <span class="material-icons-round text-[16px]">mail</span> Mensajes
+                </a>
                 
                 <a href="{{ url_for('main.pricing') }}" class="bg-amazon-base border border-gray-600 rounded px-2 py-1 flex items-center gap-2 hover:border-amazon-accent transition-colors" title="Comprar más créditos">
                     <span class="text-yellow-400 font-bold flex items-center"><span class="material-icons-round text-[14px]">star</span>{{ current_user.prem_credits }}</span>
@@ -58,39 +74,42 @@
         </div>
     </div>
 
-    <header class="bg-amazon-base sticky top-0 z-50 py-3 shadow-md">
+    <header class="bg-panama-blue sticky top-0 z-50 py-3 shadow-md border-b-4 border-panama-red">
         <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-4 md:gap-6">
             
             <a href="{{ url_for('main.index') }}" class="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-1 flex-shrink-0 focus:outline-none">
-                <span class="material-icons-round text-amazon-accent text-3xl">storefront</span>
-                Panama<span class="font-normal text-gray-300">Classifieds</span>
+                <span class="material-icons-round text-panama-gold text-3xl">storefront</span>
+                Panama<span class="font-normal text-panama-blue-light">Classifieds</span>
             </a>
 
             <div class="flex-1 w-full flex justify-center">
-                <form action="{{ url_for('listings.index') }}" method="GET" class="flex w-full max-w-4xl h-11 rounded overflow-hidden focus-within:ring-2 focus-within:ring-amazon-accent shadow-sm">
+                <form action="{{ url_for('listings.index') }}" method="GET" class="flex w-full max-w-4xl h-11 rounded overflow-hidden focus-within:ring-2 focus-within:ring-panama-gold shadow-sm">
                     <div class="hidden md:block bg-gray-100 border-r border-gray-300 hover:bg-gray-200 transition-colors">
                         <select name="category_id" title="Seleccionar categoría" aria-label="Seleccionar categoría" class="h-full py-0 pl-3 pr-8 bg-transparent text-gray-700 text-sm focus:ring-0 cursor-pointer outline-none border-none font-medium">
                             <option value="">Todas las categorías</option>
                             <option value="1">Electrónica</option>
-                            <option value="2">Vehículos</option>
-                            <option value="3">Inmuebles</option>
+                            <option value="2">Bienes Raíces</option>
+                            <option value="3">Vehículos</option>
                             <option value="4">Moda</option>
                             <option value="5">Hogar</option>
                         </select>
                     </div>
                     <input type="text" name="search" placeholder="Buscar productos, marcas y más..." title="Buscar artículos" aria-label="Buscar artículos" value="{{ request.args.get('search', '') }}" class="flex-1 px-4 text-black border-none focus:ring-0 outline-none text-base">
-                    <button type="submit" class="bg-amazon-accent hover:bg-amazon-hover text-amazon-base px-6 font-bold transition-colors flex items-center justify-center">
+                    <button type="submit" class="bg-panama-red hover:bg-red-700 text-white px-6 font-bold transition-colors flex items-center justify-center">
                         <span class="material-icons-round">search</span>
                     </button>
                 </form>
             </div>
             
             <div class="md:hidden flex w-full justify-between items-center text-white text-sm font-bold mt-2 px-2">
-                <a href="{{ url_for('listings.create') }}" class="flex items-center gap-1 text-amazon-accent"><span class="material-icons-round text-base">add_circle</span> Vender</a>
+                <a href="{{ url_for('listings.create') }}" class="flex items-center gap-1 text-panama-gold"><span class="material-icons-round text-base">add_circle</span> Vender</a>
                 {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.login') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">person</span> Ingresar</a>
                 {% else %}
-                <a href="{{ url_for('listings.my_listings') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">inventory</span> Mis Anuncios</a>
+                <a href="{{ url_for('main.wallet') }}" class="flex items-center gap-1 text-green-400"><span class="material-icons-round text-base">account_balance_wallet</span></a>
+                <a href="{{ url_for('main.inbox') }}" class="flex items-center gap-1 text-panama-gold"><span class="material-icons-round text-base">mail</span></a>
+                <a href="{{ url_for('main.edit_profile') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">manage_accounts</span></a>
+                <a href="{{ url_for('listings.my_listings') }}" class="flex items-center gap-1"><span class="material-icons-round text-base">inventory</span></a>
                 {% endif %}
             </div>
         </div>
@@ -116,38 +135,38 @@
         {% block content %}{% endblock %}
     </main>
     
-    <footer class="bg-amazon-light text-white py-10 mt-auto border-t-4 border-amazon-accent">
+    <footer class="bg-panama-blue text-white py-10 mt-auto border-t-4 border-panama-gold">
         <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-sm">
                 <div>
-                    <h3 class="font-bold mb-3 text-amazon-accent">Comprar</h3>
+                    <h3 class="font-bold mb-3 text-panama-gold">Comprar</h3>
                     <ul class="space-y-2 text-gray-300">
                         <li><a href="{{ url_for('auth.register') }}" class="hover:underline">Crear cuenta</a></li>
                         <li><a href="{{ url_for('listings.index') }}" class="hover:underline">Explorar anuncios</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-3 text-amazon-accent">Vender</h3>
+                    <h3 class="font-bold mb-3 text-panama-gold">Vender</h3>
                     <ul class="space-y-2 text-gray-300">
                         <li><a href="{{ url_for('listings.create') }}" class="hover:underline">Publicar un artículo</a></li>
                         <li><a href="{{ url_for('main.pricing') }}" class="hover:underline">Paquetes y Tarifas</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-3 text-amazon-accent">Acerca de Nosotros</h3>
+                    <h3 class="font-bold mb-3 text-panama-gold">Acerca de Nosotros</h3>
                     <ul class="space-y-2 text-gray-300">
                         <li><a href="{{ url_for('main.privacy') }}" class="hover:underline">Política de Privacidad</a></li>
                         <li><a href="#" class="hover:underline">Términos y condiciones</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-3 text-amazon-accent">Ayuda</h3>
+                    <h3 class="font-bold mb-3 text-panama-gold">Ayuda</h3>
                     <ul class="space-y-2 text-gray-300">
                         <li><a href="#" class="hover:underline">Soporte técnico</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-600 pt-6 text-center text-xs text-gray-400">
+            <div class="border-t border-panama-blue-light pt-6 text-center text-xs text-gray-300">
                 <p>Copyright &copy; 2026 Panama Classifieds. Proyecto con Arquitectura Híbrida.</p>
             </div>
         </div>
