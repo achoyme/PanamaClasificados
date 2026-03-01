@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import eventlet
+eventlet.monkey_patch()
+
 from app import create_app
 from app.extensions import db, socketio
 from app.models import User, Listing, Category, Report, AIAnalysis
