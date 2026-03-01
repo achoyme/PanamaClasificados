@@ -1,122 +1,245 @@
 {% extends "base.html" %}
-
-{% block title %}{{ listing.title }}{% endblock %}
-
+{% block title %}{{ listing.title | e }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+/* Animación para subastas en vivo */
+@keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
+    50% { box-shadow: 0 0 0 15px rgba(217, 119, 6, 0); }
+}
+.auction-live {
+    animation: pulse-gold 2s infinite;
+}
+/* Burbujas de chat estilo Messenger */
+.chat-bubble-me {
+    background: linear-gradient(135deg, #1A365D 0%, #2B4C7E 100%);
+    color: white;
+    border-radius: 18px 18px 4px 18px;
+}
+.chat-bubble-other {
+    background: white;
+    color: #1A1A1A;
+    border: 1px solid #E5E7EB;
+    border-radius: 18px 18px 18px 4px;
+}
+</style>
 {% endblock %}
-
 {% block content %}
 <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <div class="text-xs text-gray-500 mb-6 flex items-center gap-2">
-        <a href="{{ url_for('listings.index') }}" class="hover:underline flex items-center"><span class="material-icons-round text-sm mr-1">arrow_back_ios</span> Volver a los resultados</a>
-        <span class="text-gray-300">|</span>
-        <span>Listado en la categoría: <span class="text-blue-600 font-medium">{{ listing.category.name if listing.category else 'General' }}</span></span>
-    </div>
+    <nav class="text-sm font-medium text-gray-500 mb-6 flex flex-wrap items-center gap-2" aria-label="Breadcrumb">
+      <ol class="list-none p-0 inline-flex items-center space-x-2">
+        <li class="flex items-center">
+          <a href="{{ url_for('main.index') }}" class="hover:text-panama-blue transition-colors flex items-center gap-1">
+            <span class="material-icons-round text-[16px]">home</span> Inicio
+          </a>
+          <span class="mx-2 text-gray-300">/</span>
+        </li>
+        <li class="flex items-center">
+          <a href="{{ url_for('listings.index') }}" class="hover:text-panama-blue transition-colors">Catálogo</a>
+          <span class="mx-2 text-gray-300">/</span>
+        </li>
+        {% if listing.category %}
+        <li class="flex items-center">
+          <a href="{{ url_for('listings.index', category_id=listing.category.id) }}" class="hover:text-panama-blue transition-colors">{{ listing.category.name }}</a>
+          <span class="mx-2 text-gray-300">/</span>
+        </li>
+        {% endif %}
+        <li class="text-gray-800 font-bold truncate max-w-[200px] md:max-w-none" aria-current="page">{{ listing.title }}</li>
+      </ol>
+      
+      {% if listing.auction and listing.auction.status == 'Active' %}
+      <span class="text-gray-300 ml-2">|</span>
+      <span class="text-panama-gold font-bold flex items-center gap-1 ml-2">
+          <span class="material-icons-round text-[14px] animate-pulse">local_fire_department</span> SUBASTA ACTIVA
+      </span>
+      {% endif %}
+    </nav>
 
     <div class="flex flex-col md:flex-row gap-10">
         <div class="w-full md:w-1/2 lg:w-5/12">
-            <div class="bg-gray-50 border border-gray-200 rounded-md overflow-hidden relative group cursor-pointer aspect-square flex items-center justify-center p-2 mb-4" onclick="openLightbox(currentMainIndex)">
-                <img id="main-image" src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/800x800?text=Sin+Imagen' }}" alt="Imagen principal de {{ listing.title }}" onerror="this.onerror=null; this.src='https://placehold.co/800x800?text=Sin+Imagen';" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
-                <div class="absolute bottom-4 right-4 bg-white/80 p-2 rounded-full shadow-sm text-gray-600 flex items-center justify-center group-hover:bg-white transition-colors">
+            {% if listing.auction and listing.auction.status == 'Active' and listing.auction.end_time > now %}
+            <div class="auction-live bg-gradient-to-r from-panama-gold to-orange-400 text-white p-3 rounded-t-xl flex items-center justify-between mb-0">
+                <span class="font-black text-sm flex items-center gap-2">
+                    <span class="material-icons-round animate-pulse">local_fire_department</span>
+                    🔥 SUBASTA EN VIVO
+                </span>
+                <span id="auction-timer" class="font-mono font-bold bg-black/20 px-3 py-1 rounded">
+                    --:--:--
+                </span>
+            </div>
+            {% endif %}
+            
+            <div class="bg-gray-50 border {% if listing.auction and listing.auction.status == 'Active' %}border-panama-gold border-2{% else %}border-gray-200{% endif %} rounded-b-xl overflow-hidden relative group cursor-pointer aspect-square flex items-center justify-center p-2 mb-4" onclick="openLightbox(currentMainIndex)">
+                <img id="main-image" 
+                     src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/800x800?text=Sin+Imagen' }}" 
+                     alt="Imagen principal de {{ listing.title | e }}" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/800x800?text=Sin+Imagen';" 
+                     class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                     loading="lazy">
+                <div class="absolute bottom-4 right-4 bg-white/80 p-2 rounded-full shadow-sm text-panama-blue flex items-center justify-center group-hover:bg-white transition-colors">
                     <span class="material-icons-round text-xl">zoom_in</span>
                 </div>
             </div>
-
-            {% if listing.images and listing.images|length > 1 %}
-            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300">
+            
+            {% if listing.images and listing.images | length > 1 %}
+            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300" role="list" aria-label="Galería de imágenes">
                 {% for image in listing.images %}
-                <div class="w-16 h-16 border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:border-blue-600 transition-all flex-shrink-0" onclick="changeMainImage({{ loop.index0 }}, '{{ image.image_url }}')">
-                    <img src="{{ image.thumbnail_url or image.image_url }}" alt="Miniatura {{ loop.index }}" class="w-full h-full object-cover">
+                <div class="w-16 h-16 border {% if listing.auction and listing.auction.status == 'Active' %}border-panama-gold{% else %}border-gray-200{% endif %} rounded-md overflow-hidden cursor-pointer hover:border-panama-blue transition-all flex-shrink-0" 
+                     onclick="changeMainImage({{ loop.index0 }}, '{{ image.image_url | e }}')"
+                     role="listitem">
+                    <img src="{{ image.thumbnail_url | default(image.image_url, true) | e }}" 
+                         alt="Miniatura {{ loop.index }}" 
+                         class="w-full h-full object-cover"
+                         loading="lazy">
                 </div>
                 {% endfor %}
             </div>
             {% endif %}
         </div>
-        
+
         <div class="w-full md:w-1/2 lg:w-7/12 flex flex-col">
-            <h1 class="text-2xl font-bold text-gray-900 leading-tight mb-2">{{ listing.title }}</h1>
+            <h1 class="text-2xl font-black text-panama-blue leading-tight mb-2">{{ listing.title | e }}</h1>
+            
             <div class="text-sm text-gray-600 mb-4 pb-4 border-b border-gray-200">
-                Estado: <span class="font-bold text-gray-900">{{ listing.condition if listing.condition else 'Usado' }}</span>
+                Estado: <span class="font-bold text-gray-900">{{ listing.condition | default('Usado', true) | e }}</span>
+                {% if listing.tier == 'Premium' %}
+                <span class="ml-2 bg-panama-gold text-white text-[10px] px-2 py-0.5 rounded font-bold">DESTACADO</span>
+                {% elif listing.tier == 'Profesional' %}
+                <span class="ml-2 bg-panama-blue text-white text-[10px] px-2 py-0.5 rounded font-bold">RECOMENDADO</span>
+                {% endif %}
             </div>
-
+            
             <div class="flex flex-col lg:flex-row gap-8">
-                <div class="flex-1 bg-gray-50 border border-gray-200 p-6 rounded-md">
+                <div class="flex-1 bg-white border {% if listing.auction and listing.auction.status == 'Active' %}border-panama-gold border-2{% else %}border-gray-200{% endif %} shadow-sm p-6 rounded-md {% if listing.auction and listing.auction.status == 'Active' %}auction-live{% endif %}">
                     <div class="mb-6">
-                        <span class="text-gray-600 text-sm">Precio:</span>
-                        <div class="text-4xl font-black text-gray-900 mt-1">${{ listing.price }}</div>
-                        {% if listing.is_negotiable %}
-                        <div class="text-sm text-gray-500 mt-1 font-medium">O mejor oferta (Negociable)</div>
-                        {% endif %}
-                    </div>
-
-                    {% if listing.status == 'Sold' %}
-                        <div class="bg-red-100 border border-red-300 text-red-800 p-5 rounded-lg flex items-center gap-4 mb-6 shadow-sm">
-                            <span class="material-icons-round text-4xl">sell</span>
-                            <div>
-                                <h3 class="font-black text-lg uppercase tracking-wider">¡Artículo Vendido!</h3>
-                                <p class="text-sm font-medium mt-1">El anuncio se retirará del catálogo pronto.</p>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="space-y-3">
-                            {% if current_user.is_authenticated and current_user.id == listing.user_id %}
-                                <div class="bg-blue-50 text-blue-800 p-3 rounded text-sm font-bold text-center border border-blue-200">
-                                    Este es tu propio anuncio.
-                                </div>
+                        <span class="text-gray-500 font-bold text-xs uppercase tracking-wider">
+                            {% if listing.auction and listing.auction.status == 'Active' %}
+                            Puja Actual
                             {% else %}
-                                <button onclick="document.getElementById('contact-modal').classList.remove('hidden')" class="flex items-center justify-center w-full bg-gray-800 hover:bg-gray-900 text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
-                                    <span class="material-icons-round text-[20px]">email</span>
-                                    Mensaje Privado (Directo)
-                                </button>
-
-                                {% if current_user.is_authenticated %}
-                                <a href="https://wa.me/507{{ listing.user.phone_number | default('60000000', true) | replace('-', '') | replace(' ', '') }}?text=Hola,%20vi%20tu%20anuncio%20en%20Panama%20Classifieds:%20{{ listing.title }}.%20¿Aún%20está%20disponible?" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
-                                    <span class="material-icons-round text-[20px]">chat</span>
-                                    WhatsApp
-                                </a>
-                                {% else %}
-                                <a href="{{ url_for('auth.login') }}" class="flex items-center justify-center w-full bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2 text-sm">
-                                    <span class="material-icons-round text-[20px] text-gray-400">lock</span>
-                                    Inicia sesión para WhatsApp
-                                </a>
-                                {% endif %}
+                            Precio
+                            {% endif %}
+                        </span>
+                        <div class="text-4xl font-black text-gray-900 mt-1">
+                            {% if listing.auction and listing.auction.status == 'Active' %}
+                            ${{ listing.auction.current_price | default(listing.price, true) }}
+                            {% else %}
+                            ${{ listing.price | default(0, true) }}
                             {% endif %}
                         </div>
+                        {% if listing.is_negotiable and not (listing.auction and listing.auction.status == 'Active') %}
+                        <div class="text-sm text-gray-500 mt-1 font-medium">O mejor oferta (Negociable)</div>
+                        {% endif %}
+                        {% if listing.auction and listing.auction.status == 'Active' %}
+                        <div class="text-sm text-panama-gold font-bold mt-1 flex items-center gap-1">
+                            <span class="material-icons-round text-[14px]">trending_up</span>
+                            {{ listing.auction.bids.count() }} pujas realizadas
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if listing.status == 'Sold' %}
+                    <div class="bg-red-50 border border-red-200 text-red-800 p-5 rounded-lg flex items-center gap-4 mb-6 shadow-sm" role="alert">
+                        <span class="material-icons-round text-4xl text-red-500">sell</span>
+                        <div>
+                            <h3 class="font-black text-lg uppercase tracking-wider">¡Artículo Vendido!</h3>
+                            <p class="text-sm font-medium mt-1">El anuncio se retirará del catálogo pronto.</p>
+                        </div>
+                    </div>
+                    {% elif listing.auction and listing.auction.status == 'Active' and listing.auction.end_time > now %}
+                    <div class="space-y-3 mb-6">
+                        <a href="{{ url_for('auctions.detail', auction_id=listing.auction.id) }}" 
+                           class="flex items-center justify-center w-full bg-gradient-to-r from-panama-gold to-orange-500 hover:from-panama-gold-hover hover:to-orange-600 text-white py-4 rounded-lg font-black transition-all shadow-lg shadow-panama-gold/30 gap-2 animate-pulse">
+                            <span class="material-icons-round text-[20px]">gavel</span>
+                            IR A LA SUBASTA EN VIVO
+                        </a>
+                        {% if listing.auction.buy_now_price %}
+                        <div class="text-center text-xs text-gray-500">
+                            O compra ahora por <span class="font-bold text-panama-blue">${{ listing.auction.buy_now_price }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="space-y-3">
+                        {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                        <div class="bg-panama-blue-light/20 text-panama-blue p-3 rounded text-sm font-bold text-center border border-panama-blue/20">
+                            Este es tu propio anuncio.
+                        </div>
+                        {% if not listing.auction %}
+                        <a href="{{ url_for('auctions.create', listing_id=listing.id) }}" 
+                           class="flex items-center justify-center w-full bg-gradient-to-r from-panama-gold to-orange-500 hover:from-panama-gold-hover hover:to-orange-600 text-white py-3.5 rounded-lg font-bold transition-all shadow-md gap-2">
+                            <span class="material-icons-round text-[20px]">local_fire_department</span>
+                            Convertir en Subasta
+                        </a>
+                        {% endif %}
+                        {% else %}
+                        
+                        <button onclick="document.getElementById('contact-modal').classList.remove('hidden')" 
+                                class="flex items-center justify-center w-full bg-panama-blue hover:bg-panama-blue/90 text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2"
+                                aria-label="Enviar mensaje privado al vendedor">
+                            <span class="material-icons-round text-[20px]">chat</span>
+                            Enviar Mensaje Privado
+                        </button>
+                        
+                        {% if current_user.is_authenticated %}
+                        <a href="https://wa.me/507{{ listing.user.phone_number | default('60000000', true) | replace('-', '') | replace(' ', '') }}?text=Hola,%20vi%20tu%20anuncio%20en%20Panama%20Classifieds:%20{{ listing.title | e }}.%20¿Aún%20está%20disponible?" 
+                           target="_blank" 
+                           rel="noopener noreferrer" 
+                           class="flex items-center justify-center w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2">
+                            <span class="material-icons-round text-[20px]">whatsapp</span>
+                            Contactar por WhatsApp
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.login') }}" 
+                           class="flex items-center justify-center w-full bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 py-3.5 rounded-full font-bold transition-colors shadow-sm gap-2 text-sm">
+                            <span class="material-icons-round text-[20px] text-gray-400">lock</span>
+                            Inicia sesión para WhatsApp
+                        </a>
+                        {% endif %}
+                        
+                        {% endif %}
+                    </div>
                     {% endif %}
-
+                    
                     <div class="mt-6 flex flex-col gap-2 text-sm text-gray-700">
                         <div class="flex items-start gap-2">
-                            <span class="material-icons-round text-gray-400 text-[18px]">place</span>
-                            <span>Ubicación general: <br><span class="font-bold">{{ listing.district }}, {{ listing.province }}, Panamá</span></span>
+                            <span class="material-icons-round text-panama-gold text-[18px]">place</span>
+                            <span>Ubicación general: <br><span class="font-bold">{{ listing.district | e }}, {{ listing.province | e }}, Panamá</span></span>
                         </div>
+                        {% if listing.view_count %}
+                        <div class="flex items-center gap-2 text-xs text-gray-400 mt-2">
+                            <span class="material-icons-round text-[14px]">visibility</span>
+                            {{ listing.view_count }} vistas
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <div class="w-full lg:w-64 flex flex-col gap-4">
                     <div class="border border-gray-200 p-4 rounded-md bg-white shadow-sm">
                         <h3 class="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide border-b border-gray-100 pb-2">Vendido por:</h3>
-                        
                         <div class="flex items-start gap-3 mb-3">
                             <div class="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden">
                                 {% if listing.user.profile_image_url %}
-                                    <img src="{{ listing.user.profile_image_url }}" alt="Avatar" class="w-full h-full object-cover">
+                                <img src="{{ listing.user.profile_image_url | e }}" alt="Avatar de {{ listing.user.first_name | e }}" class="w-full h-full object-cover" loading="lazy">
                                 {% else %}
-                                    {{ listing.user.first_name[0] | upper }}
+                                {{ listing.user.first_name[0] | upper | e }}
                                 {% endif %}
                             </div>
-                            
                             <div>
-                                <a href="{{ url_for('main.seller_profile', user_id=listing.user.id) }}" class="font-bold text-blue-600 hover:underline text-lg leading-tight flex items-center gap-1">
-                                    {{ listing.user.first_name }}
+                                <a href="{{ url_for('main.seller_profile', user_id=listing.user.id) }}" 
+                                   class="font-bold text-panama-blue hover:text-panama-red transition-colors text-lg leading-tight flex items-center gap-1">
+                                    {{ listing.user.first_name | e }}
                                 </a>
                                 {% if listing.user.account_type == 'Tienda / Promotor' %}
-                                    <span class="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded font-bold border border-yellow-200 mt-1 inline-block"><span class="material-icons-round text-[10px] align-middle">storefront</span> TIENDA</span>
+                                <span class="text-[10px] bg-panama-gold text-white px-1.5 py-0.5 rounded font-bold mt-1 inline-block shadow-sm">
+                                    <span class="material-icons-round text-[10px] align-middle">storefront</span> TIENDA
+                                </span>
                                 {% endif %}
                             </div>
                         </div>
-
+                        
                         {% if listing.user.is_verified %}
                         <div class="text-xs text-green-700 font-bold flex items-center gap-1 mb-2 bg-green-50 p-1 rounded">
                             <span class="material-icons-round text-[14px]">verified</span> Vendedor Verificado
@@ -126,21 +249,27 @@
                         <div class="bg-gray-50 p-2 rounded border border-gray-100 mt-3 mb-3 space-y-1">
                             <p class="text-[10px] font-bold text-gray-500 uppercase">Opciones de Entrega:</p>
                             {% if listing.user.has_physical_store %}
-                                <p class="text-xs text-green-700 font-bold flex items-center gap-1"><span class="material-icons-round text-[14px]">storefront</span> Retiro en Local</p>
+                            <p class="text-xs text-green-700 font-bold flex items-center gap-1">
+                                <span class="material-icons-round text-[14px]">storefront</span> Retiro en Local
+                            </p>
                             {% endif %}
                             {% if listing.user.delivery_methods %}
-                                <p class="text-xs text-blue-700 font-bold flex items-center gap-1"><span class="material-icons-round text-[14px]">local_shipping</span> Envíos disponibles</p>
+                            <p class="text-xs text-panama-blue font-bold flex items-center gap-1">
+                                <span class="material-icons-round text-[14px]">local_shipping</span> Envíos disponibles
+                            </p>
                             {% endif %}
                         </div>
                         
-                        <a href="{{ url_for('main.seller_profile', user_id=listing.user.id) }}" class="block w-full text-center text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 py-2 rounded transition-colors">
+                        <a href="{{ url_for('main.seller_profile', user_id=listing.user.id) }}" 
+                           class="block w-full text-center text-xs font-bold text-panama-blue bg-white hover:bg-gray-50 border border-gray-300 py-2 rounded transition-colors shadow-sm">
                             Ver su Catálogo
                         </a>
                     </div>
-
+                    
                     {% if current_user.is_authenticated and current_user.id != listing.user_id %}
                     <div class="text-right">
-                        <button onclick="document.getElementById('report-modal').classList.remove('hidden')" class="text-xs text-gray-500 hover:text-red-600 hover:underline flex items-center justify-end gap-1 ml-auto">
+                        <button onclick="document.getElementById('report-modal').classList.remove('hidden')" 
+                                class="text-xs text-gray-400 hover:text-red-500 hover:underline flex items-center justify-end gap-1 ml-auto transition-colors">
                             <span class="material-icons-round text-[14px]">flag</span> Informar sobre este artículo
                         </button>
                     </div>
@@ -150,190 +279,193 @@
         </div>
     </div>
 
-    {% if listing.attributes and listing.attributes|length > 0 %}
-    <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden">
+    {% if listing.attributes and listing.attributes | length > 0 %}
+    <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
         <div class="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center gap-2">
-            <span class="material-icons-round text-blue-600">list_alt</span>
-            <h2 class="font-bold text-gray-900 text-lg">Características principales</h2>
+            <span class="material-icons-round text-panama-gold">list_alt</span>
+            <h2 class="font-bold text-panama-blue text-lg">Características principales</h2>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
                 {% for key, value in listing.attributes.items() %}
-                    {% if value %}
-                    <div class="bg-white p-3 border border-gray-100 rounded shadow-sm">
-                        <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">{{ key | replace('_', ' ') }}</p>
-                        <p class="text-sm font-black text-gray-900 capitalize">{{ value }}
-                            {% if key == 'kilometraje' %} Km {% elif key == 'metros_cuadrados' %} m² {% endif %}
-                        </p>
-                    </div>
-                    {% endif %}
+                {% if value %}
+                <div class="bg-white p-3 border border-gray-100 rounded shadow-sm">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">{{ key | replace('_', ' ') | e }}</p>
+                    <p class="text-sm font-black text-gray-900 capitalize">{{ value | e }}
+                    {% if key == 'kilometraje' %} Km {% elif key == 'metros_cuadrados' %} m² {% endif %}
+                    </p>
+                </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
     </div>
     {% endif %}
 
-    <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden">
+    <div class="mt-8 bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
         <div class="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center gap-2">
-            <span class="material-icons-round text-blue-600">map</span>
-            <h2 class="font-bold text-gray-900 text-lg">Ubicación aproximada</h2>
+            <span class="material-icons-round text-panama-gold">map</span>
+            <h2 class="font-bold text-panama-blue text-lg">Ubicación aproximada</h2>
         </div>
-        <div id="location-map" class="w-full h-[300px] bg-gray-200 z-0"></div>
-        <div class="px-6 py-3 bg-white text-xs text-gray-500">
-            <p><span class="font-bold text-gray-800">Zona:</span> {{ listing.district }}, {{ listing.province }}. <br>El área sombreada representa el distrito o provincia donde se encuentra el artículo para proteger la privacidad del vendedor.</p>
+        <div id="location-map" class="w-full h-[300px] bg-gray-200 z-0" role="img" aria-label="Mapa de ubicación aproximada"></div>
+        <div class="px-6 py-3 bg-white text-xs text-gray-500 font-medium">
+            <p><span class="font-bold text-gray-800">Zona:</span> {{ listing.district | e }}, {{ listing.province | e }}. <br>El área sombreada representa el distrito o provincia donde se encuentra el artículo para proteger la privacidad del vendedor.</p>
         </div>
     </div>
 
-    <div class="mt-8 border border-gray-200 rounded-md">
-        <div class="bg-gray-100 border-b border-gray-200 px-6 py-3">
-            <h2 class="font-bold text-gray-900 text-lg">Descripción del artículo</h2>
+    <div class="mt-8 border border-gray-200 rounded-md bg-white shadow-sm">
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <h2 class="font-bold text-panama-blue text-lg flex items-center gap-2">
+                <span class="material-icons-round text-panama-gold">description</span> Descripción del artículo
+            </h2>
         </div>
         <div class="p-8">
-            <p class="text-gray-800 whitespace-pre-line text-base leading-relaxed max-w-4xl">{{ listing.description }}</p>
-            
-            <div class="mt-10 p-4 bg-gray-50 border border-gray-200 text-xs text-gray-600 leading-relaxed max-w-4xl rounded">
-                <span class="font-bold text-gray-800 block mb-1">Aviso de responsabilidad:</span>
+            <p class="text-gray-800 whitespace-pre-line text-base leading-relaxed max-w-4xl">{{ listing.description | e }}</p>
+            <div class="mt-10 p-4 bg-panama-blue-light/20 border border-panama-blue/10 text-xs text-gray-600 leading-relaxed max-w-4xl rounded font-medium">
+                <span class="font-bold text-panama-blue block mb-1">Aviso de seguridad:</span>
                 Panama Classifieds funciona exclusivamente como un catálogo visual. Las direcciones de entrega, pagos y garantías deben ser acordadas entre comprador y vendedor. Recomendamos reunirse en lugares públicos seguros.
             </div>
         </div>
     </div>
 
-    <div class="mt-8 border border-gray-200 rounded-md bg-white">
-        <div class="bg-gray-100 border-b border-gray-200 px-6 py-3">
-            <h2 class="font-bold text-gray-900 text-lg flex items-center gap-2">
-                <span class="material-icons-round text-blue-600">forum</span> Preguntas y Respuestas
+    <div class="mt-8 border border-gray-200 rounded-md bg-white shadow-sm">
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <h2 class="font-bold text-panama-blue text-lg flex items-center gap-2">
+                <span class="material-icons-round text-panama-gold">forum</span> Preguntas y Respuestas
             </h2>
         </div>
         <div class="p-6 md:p-8">
             {% if current_user.is_authenticated %}
-                {% if current_user.id != listing.user_id %}
-                <div class="mb-10">
-                    <h3 class="font-bold text-gray-900 mb-2">Pregúntale al vendedor</h3>
-                    <form action="{{ url_for('listings.ask_question', listing_id=listing.id) }}" method="POST" class="flex gap-2">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="text" name="content" required placeholder="Escribe tu pregunta aquí... Ej: ¿Aún está disponible?" class="flex-1 px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-600 outline-none text-sm">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-bold transition-colors shadow-sm">Preguntar</button>
-                    </form>
-                </div>
-                {% endif %}
-            {% else %}
-                <div class="mb-10 p-4 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 flex items-center gap-2">
-                    <span class="material-icons-round">info</span>
-                    <span><a href="{{ url_for('auth.login') }}" class="font-black hover:underline">Inicia sesión</a> o <a href="{{ url_for('auth.register') }}" class="font-black hover:underline">regístrate</a> para hacerle una pregunta pública al vendedor.</span>
-                </div>
+            {% if current_user.id != listing.user_id %}
+            <div class="mb-10">
+                <h3 class="font-bold text-gray-900 mb-2">Pregúntale al vendedor</h3>
+                <form action="{{ url_for('listings.ask_question', listing_id=listing.id) }}" method="POST" class="flex gap-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="content" required placeholder="Escribe tu pregunta aquí... Ej: ¿Aún está disponible?" maxlength="500" class="flex-1 px-4 py-3 border border-gray-300 rounded focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none text-sm transition-all">
+                    <button type="submit" class="bg-panama-blue hover:bg-panama-blue/90 text-white px-6 py-3 rounded font-bold transition-colors shadow-sm">Preguntar</button>
+                </form>
+            </div>
             {% endif %}
-
+            {% else %}
+            <div class="mb-10 p-4 bg-panama-blue-light/30 border border-panama-blue/20 rounded text-sm text-panama-blue font-medium flex items-center gap-2">
+                <span class="material-icons-round">info</span>
+                <span><a href="{{ url_for('auth.login') }}" class="font-black hover:text-panama-red underline">Inicia sesión</a> o <a href="{{ url_for('auth.register') }}" class="font-black hover:text-panama-red underline">regístrate</a> para hacerle una pregunta pública al vendedor.</span>
+            </div>
+            {% endif %}
+            
             <div class="space-y-6">
-                {% if listing.questions and listing.questions.count() > 0 %}
-                    <h3 class="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Últimas preguntas</h3>
-                    {% for q in listing.questions %}
-                    <div class="pb-2">
-                        <div class="flex items-start gap-3">
-                            <span class="material-icons-round text-gray-300 mt-0.5 text-[20px]">chat_bubble_outline</span>
-                            <div class="flex-1">
-                                <p class="text-[11px] text-gray-500 font-bold mb-0.5">
-                                    {% if current_user.is_authenticated and current_user.id == listing.user_id %}
-                                        <span class="text-blue-600">{{ q.user.first_name }} {{ q.user.last_name }}</span> (Comprador)
-                                    {% else %}
-                                        {{ q.user.first_name[:2] }}***
-                                    {% endif %}
-                                    <span class="font-normal text-gray-400 ml-1">• {{ q.created_at.strftime('%d/%m/%Y') }}</span>
-                                </p>
-                                
-                                <p class="text-gray-900 text-sm font-medium">{{ q.content }}</p>
-                                
-                                {% if q.answer %}
-                                <div class="mt-2 flex items-start gap-2 ml-1 border-l-2 border-gray-200 pl-4">
-                                    <span class="material-icons-round text-gray-400 text-[18px] transform rotate-180">subdirectory_arrow_right</span>
-                                    <div>
-                                        <p class="text-gray-600 text-sm">{{ q.answer }}</p>
-                                        <p class="text-[10px] text-gray-400 mt-1 font-bold">{{ q.answered_at.strftime('%d/%m/%Y') }}</p>
-                                    </div>
-                                </div>
+                {% if listing.questions and listing.questions | length > 0 %}
+                <h3 class="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Últimas preguntas</h3>
+                {% for q in listing.questions %}
+                <div class="pb-2">
+                    <div class="flex items-start gap-3">
+                        <span class="material-icons-round text-gray-300 mt-0.5 text-[20px]">chat_bubble_outline</span>
+                        <div class="flex-1">
+                            <p class="text-[11px] text-gray-500 font-bold mb-0.5">
+                                {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                                <span class="text-panama-blue">{{ q.user.first_name | e }} {{ q.user.last_name | e }}</span> (Comprador)
                                 {% else %}
-                                    {% if current_user.is_authenticated and current_user.id == listing.user_id %}
-                                    <form action="{{ url_for('listings.answer_question', question_id=q.id) }}" method="POST" class="mt-3 flex gap-2 ml-4">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <input type="text" name="answer" required placeholder="Escribe tu respuesta pública..." class="flex-1 px-3 py-2 border border-blue-300 rounded text-sm focus:ring-1 focus:ring-blue-600 outline-none bg-blue-50">
-                                        <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded text-xs font-bold transition-colors">Responder</button>
-                                    </form>
-                                    {% endif %}
+                                {{ q.user.first_name[:2] | e }}***
                                 {% endif %}
+                                <span class="font-normal text-gray-400 ml-1">• {{ q.created_at.strftime('%d/%m/%Y') }}</span>
+                            </p>
+                            <p class="text-gray-900 text-sm font-medium">{{ q.content | e }}</p>
+                            {% if q.answer %}
+                            <div class="mt-2 flex items-start gap-2 ml-1 border-l-2 border-gray-200 pl-4">
+                                <span class="material-icons-round text-gray-400 text-[18px] transform rotate-180">subdirectory_arrow_right</span>
+                                <div>
+                                    <p class="text-gray-600 text-sm">{{ q.answer | e }}</p>
+                                    <p class="text-[10px] text-gray-400 mt-1 font-bold">{{ q.answered_at.strftime('%d/%m/%Y') }}</p>
+                                </div>
                             </div>
+                            {% else %}
+                            
+                            {% if current_user.is_authenticated and current_user.id == listing.user_id %}
+                            <form action="{{ url_for('listings.answer_question', question_id=q.id) }}" method="POST" class="mt-3 flex gap-2 ml-4">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="text" name="answer" required placeholder="Escribe tu respuesta pública..." maxlength="500" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-panama-blue outline-none bg-gray-50">
+                                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-xs font-bold transition-colors shadow-sm">Responder Público</button>
+                            </form>
+                            <a href="{{ url_for('chat.start_chat_with_user', listing_id=listing.id, buyer_id=q.user.id) }}?q_text={{ q.content | urlencode }}" class="mt-3 ml-4 inline-flex items-center gap-1 text-xs font-bold text-panama-blue hover:text-panama-red transition-colors">
+    <span class="material-icons-round text-[16px]">lock</span> Responder por Privado (Chat)
+</a>
+                            {% endif %}
+                            
+                            {% endif %}
                         </div>
                     </div>
-                    {% endfor %}
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div class="text-center py-8 text-gray-400">
-                        <span class="material-icons-round text-4xl mb-2">forum</span>
-                        <p class="text-sm font-bold">Nadie ha hecho preguntas todavía.</p>
-                        <p class="text-xs mt-1">¡Sé el primero en consultar al vendedor!</p>
-                    </div>
+                <div class="text-center py-8 text-gray-400">
+                    <span class="material-icons-round text-4xl mb-2">forum</span>
+                    <p class="text-sm font-bold">Nadie ha hecho preguntas todavía.</p>
+                    <p class="text-xs mt-1">¡Sé el primero en consultar al vendedor!</p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<div id="lightbox-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closeLightbox()">
-    <button class="absolute top-4 right-4 md:top-8 md:right-8 text-white/70 hover:text-white transition-colors z-50 p-2">
+<div id="lightbox-modal" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closeLightbox()" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
+    <button class="absolute top-4 right-4 md:top-8 md:right-8 text-white/70 hover:text-white transition-colors z-50 p-2" aria-label="Cerrar visor">
         <span class="material-icons-round text-4xl drop-shadow-md">close</span>
     </button>
-    <button onclick="prevImage(event)" class="absolute left-2 md:left-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group">
+    <button onclick="prevImage(event)" class="absolute left-2 md:left-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group" aria-label="Imagen anterior">
         <span class="material-icons-round text-6xl md:text-7xl drop-shadow-xl group-hover:-translate-x-1 transition-transform">chevron_left</span>
     </button>
     <div class="relative w-full h-full flex items-center justify-center pointer-events-none">
         <img id="lightbox-img" src="" alt="Imagen ampliada" class="max-w-full max-h-[85vh] object-contain drop-shadow-2xl rounded pointer-events-auto select-none" onclick="event.stopPropagation();">
     </div>
-    <button onclick="nextImage(event)" class="absolute right-2 md:right-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group">
+    <button onclick="nextImage(event)" class="absolute right-2 md:right-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-all z-50 p-2 group" aria-label="Imagen siguiente">
         <span class="material-icons-round text-6xl md:text-7xl drop-shadow-xl group-hover:translate-x-1 transition-transform">chevron_right</span>
     </button>
     <div id="lightbox-counter" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm font-bold tracking-widest px-6 py-2 rounded-full backdrop-blur-sm border border-white/10">1 / 1</div>
 </div>
 
-<div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+<div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-panama-blue/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Reportar anuncio">
     <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
-        <h2 class="text-xl font-bold mb-4 text-black">Informar sobre el artículo</h2>
+        <h2 class="text-xl font-bold mb-4 text-panama-blue flex items-center gap-2">
+            <span class="material-icons-round text-red-500">flag</span> Informar sobre el artículo
+        </h2>
         <form id="report-form" class="space-y-4">
             <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">
-            <select name="report_type" id="report_type" class="w-full p-3 border border-gray-300 rounded-md text-black focus:ring-1 focus:ring-blue-600 outline-none">
+            <select name="report_type" id="report_type" class="w-full p-3 border border-gray-300 rounded-md text-gray-800 focus:border-panama-blue outline-none cursor-pointer" aria-label="Motivo del reporte">
                 <option value="FakePrice">Precio engañoso</option>
                 <option value="SuspiciousSeller">Prácticas fraudulentas</option>
                 <option value="IllegalContent">Artículo prohibido o inapropiado</option>
             </select>
-            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold hover:bg-blue-700 transition-colors">Enviar informe</button>
-            <button type="button" onclick="document.getElementById('report-modal').classList.add('hidden')" class="w-full py-2 text-blue-600 hover:underline font-bold">Cancelar</button>
+            <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-md font-bold hover:bg-red-700 transition-colors">Enviar informe</button>
+            <button type="button" onclick="document.getElementById('report-modal').classList.add('hidden')" class="w-full py-2 text-gray-500 hover:text-gray-800 font-bold transition-colors">Cancelar</button>
         </form>
     </div>
 </div>
 
-<div id="contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+<div id="contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-panama-blue/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Contactar vendedor">
     <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
         <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-            <h2 class="text-xl font-bold text-gray-900">Contactar al Vendedor Privado</h2>
-            <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-800"><span class="material-icons-round">close</span></button>
+            <h2 class="text-xl font-bold text-panama-blue">Iniciar Chat Privado</h2>
+            <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="text-gray-400 hover:text-panama-red transition-colors" aria-label="Cerrar">
+                <span class="material-icons-round">close</span>
+            </button>
         </div>
-        <form action="{{ url_for('listings.contact_seller', listing_id=listing.id) }}" method="POST" class="space-y-4">
+        <form action="{{ url_for('chat.start_chat', listing_id=listing.id) }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="bg-blue-50 p-3 rounded text-sm text-blue-800 border border-blue-200">
+                <span class="font-bold block mb-1">💬 Chat Seguro</span>
+                Tu mensaje abrirá inmediatamente una ventana de conversación privada con el vendedor en la plataforma.
+            </div>
+
             <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">Tu Nombre</label>
-                <input type="text" name="buyer_name" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Escribe tu primer mensaje</label>
+                <textarea name="message" rows="4" required placeholder="Ej: Hola, estoy muy interesado en este artículo. ¿Aún está disponible?" maxlength="1000" class="w-full p-3 border border-gray-300 rounded-md outline-none focus:border-panama-blue resize-none"></textarea>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Tu Correo</label>
-                    <input type="email" name="buyer_email" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Tu Celular</label>
-                    <input type="tel" name="buyer_phone" class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500">
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje Privado</label>
-                <textarea name="buyer_message" rows="3" required class="w-full p-2.5 border border-gray-300 rounded-md outline-none focus:border-blue-500"></textarea>
-            </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-bold transition-colors shadow-sm">Enviar Mensaje Seguro</button>
+            
+            <button type="submit" class="w-full bg-panama-blue hover:bg-panama-blue/90 text-white py-3 rounded-md font-bold transition-colors shadow-sm mt-2 flex items-center justify-center gap-2">
+                <span class="material-icons-round text-[20px]">send</span> Enviar y abrir chat
+            </button>
         </form>
     </div>
 </div>
@@ -341,152 +473,202 @@
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
 <script>
-    // ========================================================
-    // MAPA INTELIGENTE (GPS INCORPORADO PARA PANAMÁ)
-    // ========================================================
-    document.addEventListener("DOMContentLoaded", function() {
-        const distrito = "{{ listing.district }}".toLowerCase().trim();
-        const provincia = "{{ listing.province }}".toLowerCase().trim();
+document.addEventListener("DOMContentLoaded", function() {
+    // ==========================================
+    // MAPA DE UBICACIÓN
+    // ==========================================
+    const distrito = "{{ listing.district | e }}".toLowerCase().trim();
+    const provincia = "{{ listing.province | e }}".toLowerCase().trim();
+    
+    const gpsPanama = {
+        "panamá": [8.9824, -79.5199], "panama": [8.9824, -79.5199],
+        "san miguelito": [9.0326, -79.5045],
+        "la chorrera": [8.8803, -79.7833],
+        "arraiján": [8.9490, -79.6601], "arraijan": [8.9490, -79.6601],
+        "panamá oeste": [8.8803, -79.7833], "panama oeste": [8.8803, -79.7833],
+        "david": [8.4270, -82.4312], "chiriquí": [8.4270, -82.4312], "chiriqui": [8.4270, -82.4312],
+        "colón": [9.3562, -79.9009], "colon": [9.3562, -79.9009],
+        "santiago": [8.0991, -80.9820], "veraguas": [8.0991, -80.9820],
+        "penonomé": [8.5209, -80.3559], "coclé": [8.5209, -80.3559], "cocle": [8.5209, -80.3559],
+        "chitré": [7.9628, -80.4287], "chitre": [7.9628, -80.4287], "herrera": [7.9628, -80.4287],
+        "las tablas": [7.7663, -80.2777], "los santos": [7.7663, -80.2777],
+        "bocas del toro": [9.3400, -82.2524],
+        "darién": [8.4093, -78.1465], "darien": [8.4093, -78.1465],
+        "boquete": [8.7800, -82.4308]
+    };
+    
+    function drawMap(lat, lon, zoom) {
+        const map = L.map('location-map').setView([lat, lon], zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        L.circle([lat, lon], {
+            color: '#2B4C7E', fillColor: '#5B8CB8', fillOpacity: 0.3, radius: 2500
+        }).addTo(map);
+    }
+    
+    if (gpsPanama[distrito]) {
+        drawMap(gpsPanama[distrito][0], gpsPanama[distrito][1], 12);
+    } else if (gpsPanama[provincia]) {
+        drawMap(gpsPanama[provincia][0], gpsPanama[provincia][1], 10);
+    } else {
+        const query = `${distrito}, ${provincia}, Panama`;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    drawMap(parseFloat(data[0].lat), parseFloat(data[0].lon), 12);
+                } else {
+                    drawMap(8.5379, -80.7820, 7);
+                }
+            }).catch(() => drawMap(8.5379, -80.7820, 7));
+    }
+
+    // ==========================================
+    // TEMPORIZADOR DE SUBASTA (Si está activa)
+    // ==========================================
+    {% if listing.auction and listing.auction.status == 'Active' and listing.auction.end_time > now %}
+    const auctionEndTime = new Date('{{ listing.auction.end_time.isoformat() }}');
+    function updateAuctionTimer() {
+        const now = new Date();
+        const diff = auctionEndTime - now;
         
-        // Diccionario GPS con las coordenadas exactas a prueba de fallos
-        const gpsPanama = {
-            "panamá": [8.9824, -79.5199], "panama": [8.9824, -79.5199],
-            "san miguelito": [9.0326, -79.5045],
-            "la chorrera": [8.8803, -79.7833],
-            "arraiján": [8.9490, -79.6601], "arraijan": [8.9490, -79.6601],
-            "panamá oeste": [8.8803, -79.7833], "panama oeste": [8.8803, -79.7833],
-            "david": [8.4270, -82.4312], "chiriquí": [8.4270, -82.4312], "chiriqui": [8.4270, -82.4312],
-            "colón": [9.3562, -79.9009], "colon": [9.3562, -79.9009],
-            "santiago": [8.0991, -80.9820], "veraguas": [8.0991, -80.9820],
-            "penonomé": [8.5209, -80.3559], "coclé": [8.5209, -80.3559], "cocle": [8.5209, -80.3559],
-            "chitré": [7.9628, -80.4287], "chitre": [7.9628, -80.4287], "herrera": [7.9628, -80.4287],
-            "las tablas": [7.7663, -80.2777], "los santos": [7.7663, -80.2777],
-            "bocas del toro": [9.3400, -82.2524],
-            "darién": [8.4093, -78.1465], "darien": [8.4093, -78.1465],
-            "boquete": [8.7800, -82.4308]
-        };
-
-        function drawMap(lat, lon, zoom) {
-            const map = L.map('location-map').setView([lat, lon], zoom);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-            L.circle([lat, lon], {
-                color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.3, radius: 2500 
-            }).addTo(map);
+        if (diff <= 0) {
+            document.getElementById('auction-timer').textContent = 'FINALIZADA';
+            location.reload();
+            return;
         }
+        
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        document.getElementById('auction-timer').textContent =
+            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    setInterval(updateAuctionTimer, 1000);
+    updateAuctionTimer();
+    {% endif %}
+});
 
-        // 1. Intentamos con el distrito (Más preciso)
-        if (gpsPanama[distrito]) {
-            drawMap(gpsPanama[distrito][0], gpsPanama[distrito][1], 12);
-        } 
-        // 2. Si falla el distrito, intentamos con la provincia
-        else if (gpsPanama[provincia]) {
-            drawMap(gpsPanama[provincia][0], gpsPanama[provincia][1], 10);
-        } 
-        // 3. Si no está en nuestra lista, le preguntamos a la base de datos de internet
-        else {
-            const query = `${distrito}, ${provincia}, Panama`;
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        drawMap(parseFloat(data[0].lat), parseFloat(data[0].lon), 12);
-                    } else {
-                        // 4. Si internet falla o no encuentra nada, centramos en Panamá en general
-                        drawMap(8.5379, -80.7820, 7);
-                    }
-                }).catch(() => drawMap(8.5379, -80.7820, 7));
-        }
-    });
+// ==========================================
+// GALERÍA DE IMÁGENES
+// ==========================================
+const galleryImages = [
+    {% if listing.images %}
+    {% for img in listing.images %}
+    "{{ img.image_url | e }}"{% if not loop.last %},{% endif %}
+    {% endfor %}
+    {% else %}
+    "https://placehold.co/800x800?text=Sin+Imagen"
+    {% endif %}
+];
 
-    // Lógica del Lightbox de la Galería
-    const galleryImages = [
-        {% if listing.images %}
-            {% for img in listing.images %}
-                "{{ img.image_url }}"{% if not loop.last %},{% endif %}
-            {% endfor %}
-        {% else %}
-            "https://placehold.co/800x800?text=Sin+Imagen"
-        {% endif %}
-    ];
+let currentMainIndex = 0;
+const lightboxModal = document.getElementById('lightbox-modal');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxCounter = document.getElementById('lightbox-counter');
+const mainImageDisplay = document.getElementById('main-image');
 
-    let currentMainIndex = 0;
-    const lightboxModal = document.getElementById('lightbox-modal');
-    const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxCounter = document.getElementById('lightbox-counter');
-    const mainImageDisplay = document.getElementById('main-image');
+// CAMBIO: Aseguramos que la imagen principal tenga una transición suave por CSS
+if(mainImageDisplay) {
+    mainImageDisplay.style.transition = "opacity 0.2s ease-in-out";
+}
 
-    function changeMainImage(index, url) {
-        currentMainIndex = index;
+// CAMBIO: Lógica para emular una galería interactiva profesional
+function changeMainImage(index, url) {
+    currentMainIndex = index;
+    
+    // Efecto Fade Out
+    mainImageDisplay.style.opacity = 0;
+    
+    setTimeout(() => {
+        // Cambiar la fuente de la imagen mientras está invisible
         mainImageDisplay.src = url;
-    }
-
-    function openLightbox(index) {
-        currentMainIndex = index;
-        updateLightboxUI();
-        lightboxModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => {
-            lightboxModal.classList.remove('opacity-0');
-            lightboxModal.classList.add('opacity-100');
-        }, 10);
-    }
-
-    function closeLightbox() {
-        lightboxModal.classList.remove('opacity-100');
-        lightboxModal.classList.add('opacity-0');
-        setTimeout(() => {
-            lightboxModal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }, 300);
-    }
-
-    function nextImage(e) {
-        if(e) e.stopPropagation();
-        currentMainIndex = (currentMainIndex + 1) % galleryImages.length;
-        updateLightboxUI();
-    }
-
-    function prevImage(e) {
-        if(e) e.stopPropagation();
-        currentMainIndex = (currentMainIndex - 1 + galleryImages.length) % galleryImages.length;
-        updateLightboxUI();
-    }
-
-    function updateLightboxUI() {
-        lightboxImg.src = galleryImages[currentMainIndex];
-        lightboxCounter.innerText = `${currentMainIndex + 1} / ${galleryImages.length}`;
-    }
-
-    document.addEventListener('keydown', function(e) {
-        if (!lightboxModal.classList.contains('hidden')) {
-            if (e.key === 'ArrowRight') nextImage();
-            else if (e.key === 'ArrowLeft') prevImage();
-            else if (e.key === 'Escape') closeLightbox();
+        // Efecto Fade In
+        mainImageDisplay.style.opacity = 1;
+    }, 200);
+    
+    // Resaltar la miniatura activa visualmente
+    const thumbnails = document.querySelectorAll('[role="listitem"]');
+    thumbnails.forEach((thumb, i) => {
+        if(i === index) {
+            thumb.classList.add('border-panama-blue', 'ring-2', 'ring-panama-blue');
+            thumb.classList.remove('border-gray-200');
+        } else {
+            thumb.classList.remove('border-panama-blue', 'ring-2', 'ring-panama-blue');
+            thumb.classList.add('border-gray-200');
         }
     });
+}
 
-    document.getElementById('report-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const listingId = parseInt("{{ listing.id }}", 10);
-        const csrfToken = document.getElementById('csrf_token').value;
-        const data = { listing_id: listingId, report_type: document.getElementById('report_type').value };
+function openLightbox(index) {
+    currentMainIndex = index;
+    updateLightboxUI();
+    lightboxModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        lightboxModal.classList.remove('opacity-0');
+        lightboxModal.classList.add('opacity-100');
+    }, 10);
+}
 
-        try {
-            const res = await fetch("{{ url_for('reports.create') }}", {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, 
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            alert(result.message || result.error);
-            document.getElementById('report-modal').classList.add('hidden');
-        } catch (error) {
-            alert("Ocurrió un error al enviar el reporte.");
-        }
-    });
+function closeLightbox() {
+    lightboxModal.classList.remove('opacity-100');
+    lightboxModal.classList.add('opacity-0');
+    setTimeout(() => {
+        lightboxModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }, 300);
+}
+
+function nextImage(e) {
+    if(e) e.stopPropagation();
+    currentMainIndex = (currentMainIndex + 1) % galleryImages.length;
+    updateLightboxUI();
+}
+
+function prevImage(e) {
+    if(e) e.stopPropagation();
+    currentMainIndex = (currentMainIndex - 1 + galleryImages.length) % galleryImages.length;
+    updateLightboxUI();
+}
+
+function updateLightboxUI() {
+    lightboxImg.src = galleryImages[currentMainIndex];
+    lightboxCounter.innerText = `${currentMainIndex + 1} / ${galleryImages.length}`;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (!lightboxModal.classList.contains('hidden')) {
+        if (e.key === 'ArrowRight') nextImage();
+        else if (e.key === 'ArrowLeft') prevImage();
+        else if (e.key === 'Escape') closeLightbox();
+    }
+});
+
+// ==========================================
+// REPORTAR ANUNCIO
+// ==========================================
+document.getElementById('report-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const listingId = parseInt("{{ listing.id }}", 10);
+    const csrfToken = document.getElementById('csrf_token').value;
+    const data = { listing_id: listingId, report_type: document.getElementById('report_type').value };
+    
+    try {
+        const res = await fetch("{{ url_for('reports.create') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        alert(result.message || result.error);
+        document.getElementById('report-modal').classList.add('hidden');
+    } catch (error) {
+        alert("Ocurrió un error al enviar el reporte.");
+    }
+});
 </script>
 {% endblock %}

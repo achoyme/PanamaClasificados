@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Usuario {{ user.email }}{% endblock %}
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <a href="{{ url_for('admin.users_list') }}" class="text-blue-600 hover:underline mb-6 inline-block font-bold">← Volver a Usuarios</a>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-amazon-accent">person</span> Información del Usuario
+                </h2>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="font-bold text-gray-600">ID:</span> #{{ user.id }}</div>
+                    <div><span class="font-bold text-gray-600">Email:</span> {{ user.email }}</div>
+                    <div><span class="font-bold text-gray-600">Nombre:</span> {{ user.first_name }} {{ user.last_name }}</div>
+                    <div><span class="font-bold text-gray-600">Teléfono:</span> {{ user.phone_number or 'No registrado' }}</div>
+                    <div><span class="font-bold text-gray-600">Provincia:</span> {{ user.province or 'No registrado' }}</div>
+                    <div><span class="font-bold text-gray-600">Registro:</span> {{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                    <div><span class="font-bold text-gray-600">Último Login:</span> {{ user.last_login_at.strftime('%d/%m/%Y %H:%M') if user.last_login_at else 'Nunca' }}</div>
+                    <div><span class="font-bold text-gray-600">Tipo:</span> {{ user.account_type or 'Particular' }}</div>
+                </div>
+                
+                <div class="mt-4 flex gap-2 flex-wrap">
+                    {% if user.is_admin %}<span class="bg-red-100 text-red-700 px-3 py-1 rounded font-bold text-xs">ADMINISTRADOR</span>{% endif %}
+                    {% if user.is_moderator %}<span class="bg-purple-100 text-purple-700 px-3 py-1 rounded font-bold text-xs">MODERADOR</span>{% endif %}
+                    {% if user.is_verified %}<span class="bg-green-100 text-green-700 px-3 py-1 rounded font-bold text-xs">VERIFICADO</span>{% endif %}
+                    {% if user.is_banned %}<span class="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs">SUSPENDIDO</span>{% endif %}
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold mb-4">📦 Anuncios del Usuario ({{ listings|length }})</h2>
+                {% if listings %}
+                <div class="space-y-2">
+                    {% for listing in listings %}
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="font-bold text-blue-600 hover:underline">{{ listing.title }}</a>
+                        <span class="text-xs {% if listing.status == 'Active' %}text-green-600{% else %}text-red-600{% endif %} font-bold">{{ listing.status }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">No tiene anuncios publicados.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 class="font-bold mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-yellow-600">account_balance_wallet</span> Créditos
+                </h3>
+                <div class="text-2xl font-black text-yellow-600 mb-1">🏆 {{ user.prof_credits or 0 }}</div>
+                <div class="text-xs text-gray-500 mb-3">Profesionales</div>
+                <div class="text-2xl font-black text-panama-gold mb-4">⭐ {{ user.prem_credits or 0 }}</div>
+                <div class="text-xs text-gray-500 mb-4">Premium</div>
+                
+                <form action="{{ url_for('admin.add_credits', user_id=user.id) }}" method="POST" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="number" name="prof_credits" placeholder="Profesionales" min="0" class="w-full px-3 py-2 border rounded text-sm">
+                    <input type="number" name="prem_credits" placeholder="Premium" min="0" class="w-full px-3 py-2 border rounded text-sm">
+                    <input type="text" name="reason" placeholder="Motivo (opcional)" class="w-full px-3 py-2 border rounded text-sm">
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold text-sm">Añadir Créditos</button>
+                </form>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 class="font-bold mb-4">🔧 Acciones de Admin</h3>
+                
+                <form action="{{ url_for('admin.admin_reset_password', user_id=user.id) }}" method="POST" class="mb-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded font-bold text-sm mb-2"
+                            onclick="return confirm('¿Generar contraseña temporal? El usuario deberá cambiarla.')">
+                        🔑 Restablecer Contraseña
+                    </button>
+                </form>
+                
+                <form action="{{ url_for('admin.toggle_verify', user_id=user.id) }}" method="POST" class="mb-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="w-full {% if user.is_verified %}bg-gray-500{% else %}bg-green-600{% endif %} hover:opacity-90 text-white py-2 rounded font-bold text-sm">
+                        {{ '❌ Quitar Verificación' if user.is_verified else '✅ Verificar Usuario' }}
+                    </button>
+                </form>
+                
+                <form action="{{ url_for('admin.toggle_ban', user_id=user.id) }}" method="POST" class="mb-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="reason" placeholder="Motivo de suspensión" class="w-full px-3 py-2 border rounded text-sm mb-2">
+                    <button type="submit" class="w-full {% if user.is_banned %}bg-green-600{% else %}bg-red-600{% endif %} hover:opacity-90 text-white py-2 rounded font-bold text-sm">
+                        {{ '🟢 Activar Usuario' if user.is_banned else '🚫 Suspender Usuario' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

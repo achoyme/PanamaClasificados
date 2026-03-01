@@ -3,44 +3,44 @@
 {% block title %}{{ 'Editar' if is_edit else 'Nueva' }} Publicación{% endblock %}
 {% block content %}
 <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    
     <div class="mb-8">
         <h1 class="text-3xl md:text-4xl font-black text-panama-blue tracking-tight">{{ 'Editar o republicar' if is_edit else 'Publicar nuevo' }} anuncio</h1>
         <p class="text-base text-gray-500 mt-2 font-medium">Completa los datos de tu artículo para que miles de panameños puedan encontrarlo.</p>
     </div>
-    
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
-        
         <div class="lg:col-span-2">
             <form id="listing-form" method="POST" action="{{ url_for('listings.edit', listing_id=listing.id) if is_edit else url_for('listings.create') }}" enctype="multipart/form-data" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
+                
+                <!-- Selección de Tier -->
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
                     <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
                         <h3 class="font-black text-panama-blue text-lg flex items-center gap-2">
                             <span class="material-icons-round text-panama-gold">military_tech</span> Elige tu nivel de exposición
                         </h3>
-                        <a href="{{ url_for('main.pricing') }}" class="text-xs text-panama-blue hover:text-panama-red font-bold flex items-center bg-panama-blue-light px-3 py-1.5 rounded-full transition-colors"><span class="material-icons-round text-[14px] mr-1">add_shopping_cart</span> Comprar Créditos</a>
+                        <a href="{{ url_for('main.pricing') }}" class="text-xs text-panama-blue hover:text-panama-red font-bold flex items-center bg-panama-blue-light px-3 py-1.5 rounded-full transition-colors">
+                            <span class="material-icons-round text-[14px] mr-1">add_shopping_cart</span> Comprar Créditos
+                        </a>
                     </div>
                     
-                    {% set prof_credits = current_user.prof_credits|default(0, true) %}
-                    {% set prem_credits = current_user.prem_credits|default(0, true) %}
-                    
+                    {% set prof_credits = current_user.prof_credits | default(0, true) %}
+                    {% set prem_credits = current_user.prem_credits | default(0, true) %}
                     {% set has_prof = prof_credits > 0 or (is_edit and listing.tier == 'Profesional') %}
                     {% set has_prem = prem_credits > 0 or (is_edit and listing.tier == 'Premium') %}
-
+                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <label class="border-2 rounded-xl p-5 cursor-pointer transition-all hover:border-gray-400 has-[:checked]:border-panama-blue has-[:checked]:bg-panama-blue-light relative">
                             <input type="radio" name="tier" value="Gratis" class="hidden" onchange="updateTierLimits('Gratis')" {% if not is_edit or listing.tier == 'Gratis' %}checked{% endif %}>
                             <div class="font-black text-lg text-gray-800">Básico (Gratis)</div>
-                            <div class="text-xs mt-2 text-gray-500 font-medium">Visibilidad normal en el catálogo. <br>Duración hasta 35 días.</div>
+                            <div class="text-xs mt-2 text-gray-500 font-medium">Visibilidad normal en el catálogo.<br>Duración hasta 35 días.</div>
                         </label>
                         
                         <label class="border-2 rounded-xl p-5 transition-all relative {% if has_prof %}cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50{% else %}opacity-50 grayscale cursor-not-allowed border-gray-200{% endif %}">
                             <input type="radio" name="tier" value="Profesional" class="hidden" onchange="updateTierLimits('Profesional')" {% if has_prof and is_edit and listing.tier == 'Profesional' %}checked{% endif %} {% if not has_prof %}disabled{% endif %}>
                             <div class="font-black text-lg text-blue-700">Profesional</div>
                             <div class="text-[10px] font-black text-white bg-blue-600 px-2 py-0.5 rounded inline-block mt-1">Créditos: {{ prof_credits }}</div>
-                            <div class="text-xs mt-2 text-gray-500 font-medium">Borde resaltado en búsquedas. <br>Consume 1 crédito.</div>
+                            <div class="text-xs mt-2 text-gray-500 font-medium">Borde resaltado en búsquedas.<br>Consume 1 crédito.</div>
                             {% if not has_prof %}
                             <a href="{{ url_for('main.pricing') }}" class="absolute bottom-3 right-3 bg-gray-100 text-gray-600 hover:bg-gray-200 text-[10px] font-bold px-3 py-1 rounded-full transition-colors z-20 pointer-events-auto">Comprar</a>
                             {% endif %}
@@ -51,20 +51,21 @@
                             <input type="radio" name="tier" value="Premium" class="hidden" onchange="updateTierLimits('Premium')" {% if has_prem and is_edit and listing.tier == 'Premium' %}checked{% endif %} {% if not has_prem %}disabled{% endif %}>
                             <div class="font-black text-lg text-panama-gold flex items-center gap-1">Premium <span class="material-icons-round text-[18px]">star</span></div>
                             <div class="text-[10px] font-black text-white bg-panama-gold px-2 py-0.5 rounded inline-block mt-1">Créditos: {{ prem_credits }}</div>
-                            <div class="text-xs mt-2 text-gray-600 font-medium">Máxima exposición y prioridad. <br>Consume 1 crédito.</div>
+                            <div class="text-xs mt-2 text-gray-600 font-medium">Máxima exposición y prioridad.<br>Consume 1 crédito.</div>
                             {% if not has_prem %}
                             <a href="{{ url_for('main.pricing') }}" class="absolute bottom-3 right-3 bg-gray-100 text-gray-600 hover:bg-gray-200 text-[10px] font-bold px-3 py-1 rounded-full transition-colors z-20 pointer-events-auto">Comprar</a>
                             {% endif %}
                         </label>
                     </div>
-
+                    
                     <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <label for="duration_days" class="text-sm font-bold text-panama-blue">Duración de la campaña:</label>
-                        <input type="number" id="duration_days" name="duration_days" value="{{ listing.duration_days if is_edit else 20 }}" class="w-24 px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-panama-blue font-black text-center outline-none bg-white">
+                        <input type="number" id="duration_days" name="duration_days" value="{{ listing.duration_days if is_edit else 20 }}" min="20" max="60" class="w-24 px-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-panama-blue font-black text-center outline-none bg-white">
                         <span class="text-sm font-bold text-gray-500">Días</span>
                     </div>
                 </div>
 
+                <!-- Panel IA -->
                 <div class="bg-gradient-to-r from-panama-blue-light to-white p-6 rounded-2xl border border-gray-200 transition-all duration-300" id="ai-analysis-container">
                     <h3 class="font-black text-panama-blue flex items-center gap-2 mb-4">
                         <span class="material-icons-round text-panama-gold animate-pulse">auto_awesome</span> Asistente Inteligente
@@ -77,16 +78,17 @@
                     <div id="ai-quality-feedback" class="mt-3 text-xs font-bold text-gray-500 hidden px-2"></div>
                 </div>
 
+                <!-- Detalles del Artículo -->
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 space-y-6">
                     <div class="border-b border-gray-100 pb-4 mb-4">
                         <h3 class="font-black text-panama-blue text-lg flex items-center gap-2">
                             <span class="material-icons-round text-gray-400">edit_note</span> Detalles del Artículo
                         </h3>
                     </div>
-
+                    
                     <div>
                         <label for="title" class="text-sm font-bold text-panama-blue mb-1.5 block">Título de la publicación <span class="text-panama-red">*</span></label>
-                        <input type="text" id="title" name="title" placeholder="Ej: Toyota Yaris 2018 o Apartamento en San Francisco" value="{{ listing.title if is_edit else '' }}" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-base font-medium">
+                        <input type="text" id="title" name="title" placeholder="Ej: Toyota Yaris 2018 o Apartamento en San Francisco" value="{{ listing.title | e if is_edit else '' }}" required maxlength="150" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-base font-medium">
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -96,7 +98,7 @@
                                 <select id="category_id" name="category_id" required class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none bg-white appearance-none text-base font-medium cursor-pointer">
                                     <option value="">Selecciona una opción...</option>
                                     {% for c in categories %}
-                                    <option value="{{ c.id }}" {% if is_edit and listing.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                                    <option value="{{ c.id }}" {% if is_edit and listing.category_id == c.id %}selected{% endif %}>{{ c.name | e }}</option>
                                     {% endfor %}
                                 </select>
                                 <span class="material-icons-round absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
@@ -117,24 +119,27 @@
                         </div>
                     </div>
 
+                    <!-- Panel Vehículos -->
                     <div id="panel-vehiculos" class="hidden bg-gray-50 p-6 rounded-xl border border-gray-200 mt-2">
-                        <h4 class="font-black text-panama-blue mb-4 flex items-center gap-2"><span class="material-icons-round text-panama-gold">directions_car</span> Características del Vehículo</h4>
+                        <h4 class="font-black text-panama-blue mb-4 flex items-center gap-2">
+                            <span class="material-icons-round text-panama-gold">directions_car</span> Características del Vehículo
+                        </h4>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Marca</label>
-                                <input type="text" name="attr_marca" placeholder="Ej: Toyota" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('marca', '') }}"{% endif %}>
+                                <input type="text" name="attr_marca" placeholder="Ej: Toyota" maxlength="50" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('marca', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Modelo</label>
-                                <input type="text" name="attr_modelo" placeholder="Ej: Hilux" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('modelo', '') }}"{% endif %}>
+                                <input type="text" name="attr_modelo" placeholder="Ej: Hilux" maxlength="50" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('modelo', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Año</label>
-                                <input type="number" name="attr_ano" placeholder="Ej: 2020" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('ano', '') }}"{% endif %}>
+                                <input type="number" name="attr_ano" placeholder="Ej: 2020" min="1900" max="2026" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('ano', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Kilometraje</label>
-                                <input type="number" name="attr_kilometraje" placeholder="Km" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('kilometraje', '') }}"{% endif %}>
+                                <input type="number" name="attr_kilometraje" placeholder="Km" min="0" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('kilometraje', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Transmisión</label>
@@ -147,31 +152,34 @@
                         </div>
                     </div>
 
+                    <!-- Panel Inmuebles -->
                     <div id="panel-inmuebles" class="hidden bg-gray-50 p-6 rounded-xl border border-gray-200 mt-2">
-                        <h4 class="font-black text-panama-blue mb-4 flex items-center gap-2"><span class="material-icons-round text-panama-gold">house</span> Distribución del Inmueble</h4>
+                        <h4 class="font-black text-panama-blue mb-4 flex items-center gap-2">
+                            <span class="material-icons-round text-panama-gold">house</span> Distribución del Inmueble
+                        </h4>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Habitaciones</label>
-                                <input type="number" name="attr_habitaciones" placeholder="Ej: 3" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('habitaciones', '') }}"{% endif %}>
+                                <input type="number" name="attr_habitaciones" placeholder="Ej: 3" min="1" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('habitaciones', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Baños</label>
-                                <input type="number" step="0.5" name="attr_banos" placeholder="Ej: 2.5" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('banos', '') }}"{% endif %}>
+                                <input type="number" step="0.5" name="attr_banos" placeholder="Ej: 2.5" min="1" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('banos', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Tamaño (m²)</label>
-                                <input type="number" name="attr_metros" placeholder="Metros" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('metros_cuadrados', '') }}"{% endif %}>
+                                <input type="number" name="attr_metros" placeholder="Metros" min="1" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('metros_cuadrados', '') | e }}"{% endif %}>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide mb-1">Estacionamientos</label>
-                                <input type="number" name="attr_estacionamientos" placeholder="Ej: 2" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('estacionamientos', '') }}"{% endif %}>
+                                <input type="number" name="attr_estacionamientos" placeholder="Ej: 2" min="0" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-panama-blue outline-none" {% if is_edit and listing.attributes %}value="{{ listing.attributes.get('estacionamientos', '') | e }}"{% endif %}>
                             </div>
                         </div>
                     </div>
-
+                    
                     <div>
                         <label for="description" class="text-sm font-bold text-panama-blue mb-1.5 block">Descripción completa <span class="text-panama-red">*</span></label>
-                        <textarea id="description" name="description" rows="6" placeholder="Describe los detalles, garantía, motivos de venta..." required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-base">{{ listing.description if is_edit else '' }}</textarea>
+                        <textarea id="description" name="description" rows="6" placeholder="Describe los detalles, garantía, motivos de venta..." required maxlength="5000" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-base">{{ listing.description | e if is_edit else '' }}</textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-6">
@@ -180,7 +188,7 @@
                             <div class="flex items-center gap-4">
                                 <div class="relative flex-1">
                                     <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-black text-gray-500">$</span>
-                                    <input type="number" step="0.01" id="price" name="price" value="{{ listing.price if is_edit else '' }}" required class="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-xl font-black bg-white">
+                                    <input type="number" step="0.01" id="price" name="price" value="{{ listing.price | default('', true) if is_edit else '' }}" required min="0.01" max="10000000" class="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-xl font-black bg-white">
                                 </div>
                                 <label for="is_negotiable" class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer whitespace-nowrap bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
                                     <input type="checkbox" id="is_negotiable" name="is_negotiable" value="true" class="w-5 h-5 text-panama-blue focus:ring-panama-blue rounded border-gray-300" {% if is_edit and listing.is_negotiable %}checked{% elif not is_edit %}checked{% endif %}>
@@ -189,7 +197,7 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                         <div>
                             <label for="province" class="text-sm font-bold text-panama-blue mb-1.5 block">Provincia <span class="text-panama-red">*</span></label>
@@ -198,7 +206,7 @@
                                     <option value="">Selecciona tu provincia...</option>
                                     {% set provs = ['Panamá', 'Panamá Oeste', 'Chiriquí', 'Colón', 'Coclé', 'Veraguas', 'Herrera', 'Los Santos', 'Bocas del Toro', 'Darién'] %}
                                     {% for p in provs %}
-                                    <option value="{{ p }}" {% if is_edit and listing.province == p %}selected{% endif %}>{{ p }}</option>
+                                    <option value="{{ p }}" {% if is_edit and listing.province == p %}selected{% endif %}>{{ p | e }}</option>
                                     {% endfor %}
                                 </select>
                                 <span class="material-icons-round absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
@@ -206,11 +214,12 @@
                         </div>
                         <div>
                             <label for="district" class="text-sm font-bold text-panama-blue mb-1.5 block">Zona / Distrito <span class="text-panama-red">*</span></label>
-                            <input type="text" id="district" name="district" value="{{ listing.district if is_edit else '' }}" required placeholder="Ej: San Miguelito, Betania..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-base font-medium">
+                            <input type="text" id="district" name="district" value="{{ listing.district | e if is_edit else '' }}" required maxlength="100" placeholder="Ej: San Miguelito, Betania..." class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-base font-medium">
                         </div>
                     </div>
                 </div>
 
+                <!-- Galería de Imágenes -->
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
                     <div class="border-b border-gray-100 pb-4 mb-6">
                         <h3 class="font-black text-panama-blue text-lg flex items-center gap-2">
@@ -225,8 +234,8 @@
                         <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300">
                             {% for img in listing.images %}
                             <div id="existing-img-{{ img.id }}" class="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 group">
-                                <img src="{{ img.thumbnail_url or img.image_url }}" class="w-full h-full object-cover">
-                                <button type="button" onclick="deleteExistingImage({{ img.id }})" class="absolute inset-0 bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                <img src="{{ img.thumbnail_url | default(img.image_url, true) | e }}" class="w-full h-full object-cover" alt="Imagen {{ loop.index }}">
+                                <button type="button" onclick="deleteExistingImage({{ img.id }})" class="absolute inset-0 bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" aria-label="Eliminar imagen">
                                     <span class="material-icons-round text-3xl">delete_forever</span>
                                 </button>
                             </div>
@@ -239,11 +248,11 @@
                         <span class="material-icons-round text-gray-400 group-hover:text-panama-blue text-5xl mb-3 transition-colors">cloud_upload</span>
                         <p class="font-black text-panama-blue text-xl">Haz clic o arrastra tus fotos aquí</p>
                         <p class="text-sm text-gray-500 mt-2 font-medium">También puedes usar <kbd class="bg-white border border-gray-300 px-1.5 py-0.5 rounded text-xs font-mono shadow-sm">Ctrl</kbd> + <kbd class="bg-white border border-gray-300 px-1.5 py-0.5 rounded text-xs font-mono shadow-sm">V</kbd> para pegar</p>
-                        <input type="file" id="images" name="images" multiple accept="image/*, image/avif, image/webp" class="hidden">
+                        <input type="file" id="images" name="images" multiple accept="image/*, image/avif, image/webp" class="hidden" aria-label="Subir imágenes">
                     </label>
-                    <div id="image-preview" class="flex gap-4 mt-6 overflow-x-auto pb-2"></div>
+                    <div id="image-preview" class="flex gap-4 mt-6 overflow-x-auto pb-2" role="region" aria-label="Vista previa de imágenes"></div>
                 </div>
-                
+
                 <button type="submit" class="w-full bg-panama-red hover:bg-panama-red-hover text-white py-5 rounded-xl font-black shadow-lg shadow-panama-red/30 transition-all text-lg flex items-center justify-center gap-2 transform hover:-translate-y-1">
                     <span class="material-icons-round">publish</span>
                     {{ 'Guardar Cambios y Continuar' if is_edit else 'Publicar mi Anuncio Ahora' }}
@@ -251,6 +260,7 @@
             </form>
         </div>
 
+        <!-- Sidebar con Consejos -->
         <aside class="lg:col-span-1 hidden md:block">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 sticky top-28 overflow-hidden flex flex-col">
                 <div class="bg-panama-blue p-5 text-white">
@@ -283,76 +293,72 @@
                 </div>
             </div>
         </aside>
-
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // LECTURA DE CATEGORÍAS (Para Bienes Raíces y Autos)
-    function togglePanels() {
-        const select = document.getElementById('category_id');
-        const panelVehiculos = document.getElementById('panel-vehiculos');
-        const panelInmuebles = document.getElementById('panel-inmuebles');
-        
-        // Ocultar por defecto
-        panelVehiculos.classList.add('hidden');
-        panelInmuebles.classList.add('hidden');
-
-        if (!select || !select.value) return;
-
-        // Extraer texto en minusculas (Ej: "bienes raíces - ventas")
-        const text = select.options[select.selectedIndex].text.toLowerCase();
-
-        if (text.includes('vehículo') || text.includes('vehiculo') || text.includes('auto') || text.includes('motor')) {
-            panelVehiculos.classList.remove('hidden');
-        } else if (text.includes('inmueble') || text.includes('bienes') || text.includes('raíces') || text.includes('raices') || text.includes('casa')) {
-            panelInmuebles.classList.remove('hidden');
-        }
+// LECTURA DE CATEGORÍAS (Para Bienes Raíces y Autos)
+function togglePanels() {
+    const select = document.getElementById('category_id');
+    const panelVehiculos = document.getElementById('panel-vehiculos');
+    const panelInmuebles = document.getElementById('panel-inmuebles');
+    
+    panelVehiculos.classList.add('hidden');
+    panelInmuebles.classList.add('hidden');
+    
+    if (!select || !select.value) return;
+    
+    const text = select.options[select.selectedIndex].text.toLowerCase();
+    if (text.includes('vehículo') || text.includes('vehiculo') || text.includes('auto') || text.includes('motor')) {
+        panelVehiculos.classList.remove('hidden');
+    } else if (text.includes('inmueble') || text.includes('bienes') || text.includes('raíces') || text.includes('raices') || text.includes('casa')) {
+        panelInmuebles.classList.remove('hidden');
     }
+}
 
-    document.getElementById('category_id').addEventListener('change', togglePanels);
-    document.addEventListener('DOMContentLoaded', togglePanels);
+document.getElementById('category_id').addEventListener('change', togglePanels);
+document.addEventListener('DOMContentLoaded', togglePanels);
 
-    function updateTierLimits(tierName) {
-        const input = document.getElementById('duration_days');
-        let currentVal = parseInt(input.value) || 0;
-        
-        if (tierName === 'Gratis') {
-            input.min = 20; input.max = 35;
-            if(currentVal < 20) input.value = 20;
-            if(currentVal > 35) input.value = 35;
-        } else if (tierName === 'Profesional') {
-            input.min = 30; input.max = 45;
-            if(currentVal < 30) input.value = 30;
-            if(currentVal > 45) input.value = 45;
-        } else if (tierName === 'Premium') {
-            input.min = 45; input.max = 60;
-            if(currentVal < 45) input.value = 45;
-            if(currentVal > 60) input.value = 60;
-        }
+function updateTierLimits(tierName) {
+    const input = document.getElementById('duration_days');
+    let currentVal = parseInt(input.value) || 0;
+    
+    if (tierName === 'Gratis') {
+        input.min = 20; input.max = 35;
+        if(currentVal < 20) input.value = 20;
+        if(currentVal > 35) input.value = 35;
+    } else if (tierName === 'Profesional') {
+        input.min = 30; input.max = 45;
+        if(currentVal < 30) input.value = 30;
+        if(currentVal > 45) input.value = 45;
+    } else if (tierName === 'Premium') {
+        input.min = 45; input.max = 60;
+        if(currentVal < 45) input.value = 45;
+        if(currentVal > 60) input.value = 60;
     }
+}
 
-    async function deleteExistingImage(imageId) {
-        if(!confirm('¿Seguro que deseas eliminar esta imagen permanentemente?')) return;
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        
-        try {
-            const res = await fetch(`/listings/image/${imageId}/delete`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken }
-            });
-            const data = await res.json();
-            if(data.success) {
-                document.getElementById(`existing-img-${imageId}`).remove();
-            } else {
-                alert("No se pudo eliminar la imagen.");
-            }
-        } catch(e) {
-            console.error("Error al borrar la imagen", e);
+async function deleteExistingImage(imageId) {
+    if(!confirm('¿Seguro que deseas eliminar esta imagen permanentemente?')) return;
+    
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    try {
+        const res = await fetch(`/listings/image/${imageId}/delete`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById(`existing-img-${imageId}`).remove();
+        } else {
+            alert("No se pudo eliminar la imagen.");
         }
+    } catch(e) {
+        console.error("Error al borrar la imagen", e);
     }
+}
 </script>
 <script src="{{ url_for('static', filename='js/listing-create.js') }}"></script>
 {% endblock %}

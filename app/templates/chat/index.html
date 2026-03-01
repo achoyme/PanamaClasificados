@@ -1,90 +1,113 @@
 {% extends "base.html" %}
 {% block title %}Mensajes{% endblock %}
 {% block content %}
-<div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="max-w-[1000px] mx-auto py-6" style="background-color: #e9ebee; min-height: calc(100vh - 150px);">
     
-    <div class="mb-6">
-        <h1 class="text-2xl md:text-3xl font-bold text-amazon-base">Bandeja de Mensajes</h1>
-        <p class="text-sm text-gray-600 mt-1">Acuerda entregas y negocia precios de forma segura.</p>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex h-[600px] md:h-[700px] overflow-hidden">
+    <div class="flex h-[550px] bg-white border border-[#dddfe2] rounded-[2px] overflow-hidden shadow-sm mx-4">
         
-        <div class="w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 flex flex-col bg-white {% if active_conv %}hidden md:flex{% endif %}">
-            <h2 class="p-4 font-bold text-lg border-b border-gray-200 bg-gray-50 text-amazon-base flex items-center gap-2">
-                <span class="material-icons-round">forum</span> Mis Chats
-            </h2>
-            <div class="overflow-y-auto flex-1 scrollbar-hide">
-                {% for conv in conversations %}
-                <a href="{{ url_for('chat.view_chat', conv_id=conv.id) }}" class="flex items-center gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors {% if active_conv and active_conv.id == conv.id %}bg-blue-50 border-l-4 border-amazon-accent{% else %}border-l-4 border-transparent{% endif %}">
-                    <img src="{{ conv.listing.images[0].image_url if conv.listing.images else 'https://placehold.co/100x100?text=Sin+Foto' }}" alt="Foto de {{ conv.listing.title }}" class="w-12 h-12 rounded object-cover border border-gray-200">
+        <div class="w-full md:w-1/3 lg:w-[275px] border-r border-[#a3a3a3] flex flex-col bg-white {% if active_conv %}hidden md:flex{% endif %}">
+            
+            <div class="p-3 border-b border-[#dddfe2] bg-[#f6f7f9]">
+                <h4 class="text-[13px] font-bold text-[#444] uppercase m-0">Mensajes Recientes</h4>
+            </div>
+
+            <div class="overflow-y-auto flex-1">
+                <ul class="list-none p-0 m-0">
+                    {% for conv in conversations %}
+                    {% set other_user = conv.seller if current_user.id == conv.buyer_user_id else conv.buyer %}
                     
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-gray-900 truncate text-sm leading-tight">{{ conv.listing.title }}</p>
-                        <p class="text-xs font-bold text-amazon-hover mt-1">${{ conv.listing.price }}</p>
+                    <li>
+                        <a href="{{ url_for('chat.view_chat', conv_id=conv.id) }}" 
+                           class="block p-3 border-b border-[#dddfe2] hover:bg-[#ccc] transition-colors cursor-pointer text-decoration-none {% if active_conv and active_conv.id == conv.id %}bg-[#f6f7f9] border-l-4 border-[#3b5e95]{% else %}border-l-4 border-transparent{% endif %}">
+                            <div class="flex items-center gap-2">
+                                
+                                {% if other_user.profile_image_url %}
+                                    <img src="{{ other_user.profile_image_url }}" class="w-[32px] h-[32px] rounded-full object-cover border border-[#dddfe2]" alt="Avatar">
+                                {% else %}
+                                    <div class="w-[32px] h-[32px] rounded-full bg-[#3b5e95] text-white flex items-center justify-center text-[14px] font-bold">
+                                        {{ other_user.first_name[:1] | upper }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="flex-1 min-w-0 leading-tight">
+                                    <b class="text-[#3b5998] text-[12px] block truncate">{{ other_user.first_name }} {{ other_user.last_name }}</b>
+                                    <span class="text-[#545454] text-[11px] block mt-[2px] truncate">{{ conv.listing.title }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if not conversations %}
+                    <div class="p-4 text-center">
+                        <span class="text-[12px] text-[#90949c]">No hay mensajes.</span>
                     </div>
-                </a>
-                {% endfor %}
-                
-                {% if not conversations %}
-                <div class="p-8 text-center text-gray-500">
-                    <span class="material-icons-round text-4xl text-gray-300 mb-2">inbox</span>
-                    <p class="text-sm font-medium">No tienes mensajes aún.</p>
-                </div>
-                {% endif %}
+                    {% endif %}
+                </ul>
             </div>
         </div>
-        
-        <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col {% if not active_conv %}hidden md:flex{% endif %}">
+
+        <div class="w-full md:flex-1 flex flex-col bg-white {% if not active_conv %}hidden md:flex{% endif %}">
             
             {% if active_conv %}
-            <div class="p-4 border-b border-gray-200 bg-white flex items-center gap-3 shadow-sm z-10">
-                <a href="{{ url_for('chat.index') }}" class="md:hidden text-gray-500 hover:text-amazon-base mr-1">
-                    <span class="material-icons-round">arrow_back_ios_new</span>
-                </a>
-                
-                <img src="{{ active_conv.listing.images[0].image_url if active_conv.listing.images else 'https://placehold.co/100x100?text=Sin+Foto' }}" alt="Foto del artículo" class="w-10 h-10 rounded object-cover border border-gray-200">
-                <div class="flex-1 min-w-0">
-                    <a href="{{ url_for('listings.details', listing_id=active_conv.listing.id) }}" class="font-bold text-amazon-base text-base hover:text-blue-600 hover:underline truncate block leading-tight">
-                        {{ active_conv.listing.title }}
-                    </a>
-                    <p class="text-sm font-bold text-gray-600">${{ active_conv.listing.price }}</p>
-                </div>
-            </div>
+            {% set active_other_user = active_conv.seller if current_user.id == active_conv.buyer_user_id else active_conv.buyer %}
             
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-[#eaeded]">
-                <div class="flex justify-center mb-6">
-                    <div class="bg-yellow-100 text-yellow-800 text-[11px] font-bold px-4 py-2 rounded-full border border-yellow-200 shadow-sm flex items-center gap-1">
-                        <span class="material-icons-round text-[14px]">lock</span> Nunca compartas tus contraseñas o datos bancarios por aquí.
+            <div class="p-3 border-b border-[#dddfe2] bg-[#f6f7f9] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <a href="{{ url_for('chat.index') }}" class="md:hidden text-[#3b5e95] mr-2">
+                        <span class="material-icons-round text-sm">arrow_back_ios</span>
+                    </a>
+                    
+                    {% if active_other_user.profile_image_url %}
+                        <img src="{{ active_other_user.profile_image_url }}" class="w-[32px] h-[32px] rounded-full object-cover border border-[#dddfe2]">
+                    {% else %}
+                        <div class="w-[32px] h-[32px] rounded-full bg-[#3b5e95] text-white flex items-center justify-center text-[14px] font-bold">
+                            {{ active_other_user.first_name[:1] | upper }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="leading-tight">
+                        <span class="text-[#3b5998] font-bold text-[13px] block">
+                            {{ active_other_user.first_name }} {{ active_other_user.last_name }}
+                        </span>
+                        <a href="{{ url_for('listings.details', listing_id=active_conv.listing.id) }}" class="text-[#90949c] text-[11px] hover:underline">
+                            {{ active_conv.listing.title }} (${{ active_conv.listing.price }})
+                        </a>
                     </div>
                 </div>
+            </div>
 
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3" style="background-color: #fff;">
                 {% for msg in active_conv.messages %}
-                <div class="flex {% if msg.sender_user_id == current_user.id %}justify-end{% endif %}">
-                    <div class="max-w-[85%] md:max-w-[70%] p-3 rounded-xl shadow-sm {% if msg.sender_user_id == current_user.id %}bg-amazon-light text-white rounded-br-none{% else %}bg-white text-gray-800 border border-gray-200 rounded-bl-none{% endif %}">
-                        <p class="text-sm leading-relaxed">{{ msg.message_text }}</p>
+                <div class="flex {% if msg.sender_user_id == current_user.id %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="max-w-[75%] p-2 rounded-[2px] text-[12px] {% if msg.sender_user_id == current_user.id %}bg-[#e9ebee] border border-[#dddfe2] text-[#1d2129]{% else %}bg-[#f6f7f9] border border-[#dddfe2] text-[#1d2129]{% endif %}">
+                        <p class="m-0 whitespace-pre-wrap leading-relaxed">{{ msg.message_text }}</p>
+                        <span class="text-[9px] text-[#90949c] block text-right mt-1">{{ msg.created_at.strftime('%H:%M') }}</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-            
-            <form id="message-form" class="p-4 border-t border-gray-200 bg-white flex gap-2">
-                <input type="text" id="message-input" required placeholder="Escribe un mensaje..." title="Mensaje" aria-label="Escribir mensaje" autocomplete="off" class="flex-1 px-4 py-3 border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-amazon-accent focus:border-transparent outline-none transition-all">
-                <button type="submit" class="bg-amazon-accent hover:bg-amazon-hover text-amazon-base px-6 py-3 rounded font-bold shadow-sm transition-colors flex items-center gap-1">
-                    <span class="hidden sm:inline">Enviar</span>
-                    <span class="material-icons-round text-sm">send</span>
-                </button>
-            </form>
-            
+
+            <div class="p-3 border-t border-[#dddfe2] bg-[#f6f7f9]">
+                <form id="message-form" action="{{ url_for('chat.send_message', conv_id=active_conv.id) }}" method="POST" class="flex gap-2 m-0">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" id="message-input" name="message" required placeholder="Escribe un mensaje a {{ active_other_user.first_name }}..." 
+                           class="flex-1 px-2 py-1.5 text-[12px] bg-white border border-[#dddfe2] rounded-[2px] focus:outline-none focus:border-[#3b5e95]">
+                    
+                    <button type="submit" class="bg-[#3b5e95] hover:bg-[#355486] text-white px-4 py-1.5 text-[12px] font-bold rounded-[2px] border border-[#294c7b] transition-colors cursor-pointer">
+                        Enviar
+                    </button>
+                </form>
+            </div>
+
             {% else %}
-            <div class="flex-1 flex flex-col items-center justify-center text-gray-500 bg-gray-50">
-                <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                    <span class="material-icons-round text-5xl text-gray-400">forum</span>
-                </div>
-                <p class="text-xl font-bold text-amazon-base">Tus mensajes</p>
-                <p class="text-sm mt-2 text-center max-w-xs">Selecciona una conversación a la izquierda para empezar a chatear.</p>
+            <div class="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#e9ebee]">
+                <span class="material-icons-round text-[48px] text-[#a3a3a3] mb-3">forum</span>
+                <h4 class="text-[#444] text-[14px] font-bold">Tus Mensajes</h4>
+                <p class="text-[#90949c] text-[12px]">Selecciona una conversación a la izquierda para empezar a chatear.</p>
             </div>
             {% endif %}
+
         </div>
     </div>
 </div>
@@ -94,47 +117,54 @@
 {% if active_conv %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 <script>
+document.addEventListener("DOMContentLoaded", function() {
     const socket = io();
-    const msgs = document.getElementById('chat-messages');
+    const msgsContainer = document.getElementById('chat-messages');
     
-    // Auto-scroll al fondo al cargar
-    msgs.scrollTop = msgs.scrollHeight;
+    // Auto-scroll al final al cargar la página
+    if(msgsContainer) {
+        msgsContainer.scrollTop = msgsContainer.scrollHeight;
+    }
     
-    // Las comillas previenen falsos errores en VS Code
-    const roomId = "{{ active_conv.id }}";
-    const currentUserId = parseInt("{{ current_user.id }}", 10);
-    
-    socket.on('connect', () => socket.emit('join', {room: roomId}));
+    socket.on('connect', () => {
+        socket.emit('join', {room: "{{ active_conv.id }}"});
+    });
     
     socket.on('receive_message', (data) => {
-        const isMe = data.sender_id === currentUserId;
-        const msgStyle = isMe ? 'bg-amazon-light text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none';
-        const alignStyle = isMe ? 'justify-end' : '';
+        const isMe = data.sender_id === {{ current_user.id }};
+        const alignmentClass = isMe ? 'justify-end' : 'justify-start';
+        // Estilos idénticos a los inyectados por Jinja arriba
+        const bubbleClass = isMe ? 'bg-[#e9ebee] border border-[#dddfe2] text-[#1d2129]' : 'bg-[#f6f7f9] border border-[#dddfe2] text-[#1d2129]';
         
-        msgs.innerHTML += `
-            <div class="flex ${alignStyle} mt-4">
-                <div class="max-w-[85%] md:max-w-[70%] p-3 rounded-xl shadow-sm ${msgStyle}">
-                    <p class="text-sm leading-relaxed">${data.text}</p>
+        const msgHtml = `
+            <div class="flex ${alignmentClass} mt-3">
+                <div class="max-w-[75%] p-2 rounded-[2px] text-[12px] ${bubbleClass}">
+                    <p class="m-0 whitespace-pre-wrap leading-relaxed">${data.text}</p>
+                    <span class="text-[9px] text-[#90949c] block text-right mt-1">${data.created_at}</span>
                 </div>
-            </div>`;
+            </div>
+        `;
         
-        // Auto-scroll al recibir mensaje nuevo
-        msgs.scrollTop = msgs.scrollHeight;
+        msgsContainer.insertAdjacentHTML('beforeend', msgHtml);
+        msgsContainer.scrollTop = msgsContainer.scrollHeight;
     });
-    
-    document.getElementById('message-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        let input = document.getElementById('message-input');
-        
-        if(input.value.trim() !== "") {
-            socket.emit('send_message', {
-                room: roomId, 
-                message: input.value, 
-                sender_id: currentUserId
-            });
-            input.value = '';
-        }
-    });
+
+    const form = document.getElementById('message-form');
+    if(form) {
+        form.addEventListener('submit', (e) => {
+            // El formulario hace un POST normal que recarga la página por defecto en tu backend.
+            // Si quieres que funcione vía WebSocket sin recargar, descomenta las siguientes líneas y comenta el envío normal.
+            /*
+            e.preventDefault();
+            let input = document.getElementById('message-input');
+            if (input.value.trim() !== '') {
+                socket.emit('send_message', {room: "{{ active_conv.id }}", message: input.value, sender_id: {{ current_user.id }}});
+                input.value = '';
+            }
+            */
+        });
+    }
+});
 </script>
 {% endif %}
 {% endblock %}

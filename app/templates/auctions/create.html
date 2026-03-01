@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Crear Subasta - {{ listing.title }}{% endblock %}
+{% block content %}
+<div class="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{{ url_for('listings.details', listing_id=listing.id) }}" 
+           class="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 mb-4">
+            <span class="material-icons-round text-sm">arrow_back</span> Volver al anuncio
+        </a>
+        <h1 class="text-3xl md:text-4xl font-black text-panama-blue tracking-tight">
+            <span class="material-icons-round text-panama-gold text-4xl align-middle mr-2">gavel</span>
+            Convertir en Subasta
+        </h1>
+        <p class="text-base text-gray-500 mt-2 font-medium">
+            Transforma tu anuncio en una subasta en vivo y deja que los compradores pujen por él.
+        </p>
+    </div>
+
+    <!-- Información del Artículo -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+        <h3 class="font-black text-panama-blue text-lg mb-4 flex items-center gap-2">
+            <span class="material-icons-round text-gray-400">inventory_2</span> Artículo a Subastar
+        </h3>
+        <div class="flex gap-4">
+            <div class="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                <img src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/200x200?text=Sin+Imagen' }}" 
+                     alt="{{ listing.title }}" 
+                     class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold text-gray-900 text-lg mb-2">{{ listing.title }}</h4>
+                <!-- ✅ CORREGIDO: Convertir Decimal a float -->
+                <p class="text-2xl font-black text-panama-blue mb-2">${{ listing.price | float }}</p>
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <span class="flex items-center gap-1">
+                        <span class="material-icons-round text-[16px] text-gray-400">place</span>
+                        {{ listing.district }}, {{ listing.province }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="material-icons-round text-[16px] text-gray-400">calendar_today</span>
+                        Publicado: {{ listing.created_at.strftime('%d/%m/%Y') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Subasta -->
+    <form method="POST" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Precio de Salida -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h3 class="font-black text-panama-blue text-lg mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-panama-gold">monetization_on</span> Configuración de Puja
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="start_price" class="block text-sm font-bold text-gray-700 mb-2">
+                        Precio de Salida ($) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-black text-gray-500">$</span>
+                        <!-- ✅ CORREGIDO: Valor por defecto convertido a float -->
+                        <input type="number" 
+                               id="start_price" 
+                               name="start_price" 
+                               value="{{ listing.price | float }}" 
+                               step="0.01" 
+                               min="1" 
+                               required 
+                               class="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-lg font-black">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        ⚠️ Este será el precio inicial. Las pujas deben superar este monto.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="buy_now_price" class="block text-sm font-bold text-gray-700 mb-2">
+                        Precio de Compra Inmediata (Opcional)
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-black text-gray-500">$</span>
+                        <!-- ✅ CORREGIDO: Operación matemática con float -->
+                        <input type="number" 
+                               id="buy_now_price" 
+                               name="buy_now_price" 
+                               step="0.01" 
+                               min="1" 
+                               placeholder="Ej: ${{ (listing.price | float * 1.5) | round(2) }}" 
+                               class="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none transition-all text-lg font-black">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        💡 Si un comprador paga este monto, la subasta termina inmediatamente.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duración -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h3 class="font-black text-panama-blue text-lg mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-panama-gold">schedule</span> Duración de la Subasta
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label class="border-2 rounded-xl p-4 cursor-pointer transition-all hover:border-panama-blue has-[:checked]:border-panama-blue has-[:checked]:bg-panama-blue-light relative">
+                    <input type="radio" name="duration_hours" value="24" class="hidden" onchange="updateDurationPreview()">
+                    <div class="font-black text-gray-800 text-center">24 Horas</div>
+                    <div class="text-xs text-gray-500 text-center mt-1">Rápida</div>
+                </label>
+                
+                <label class="border-2 rounded-xl p-4 cursor-pointer transition-all hover:border-panama-blue has-[:checked]:border-panama-blue has-[:checked]:bg-panama-blue-light relative">
+                    <input type="radio" name="duration_hours" value="72" class="hidden" checked onchange="updateDurationPreview()">
+                    <div class="font-black text-gray-800 text-center">72 Horas</div>
+                    <div class="text-xs text-gray-500 text-center mt-1">Recomendada</div>
+                    <div class="absolute top-2 right-2 bg-panama-gold text-white text-[9px] font-black px-2 py-0.5 rounded">POPULAR</div>
+                </label>
+                
+                <label class="border-2 rounded-xl p-4 cursor-pointer transition-all hover:border-panama-blue has-[:checked]:border-panama-blue has-[:checked]:bg-panama-blue-light relative">
+                    <input type="radio" name="duration_hours" value="168" class="hidden" onchange="updateDurationPreview()">
+                    <div class="font-black text-gray-800 text-center">7 Días</div>
+                    <div class="text-xs text-gray-500 text-center mt-1">Máxima Exposición</div>
+                </label>
+            </div>
+            
+            <div class="mt-4 bg-panama-blue-light/30 p-4 rounded-lg border border-panama-blue/20">
+                <p class="text-sm text-panama-blue font-medium">
+                    <span class="font-bold">📅 Fecha de finalización estimada:</span> 
+                    <span id="end-date-preview" class="font-black">{{ (listing.created_at.strftime('%d/%m/%Y %H:%M')) }}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Comisión y Términos -->
+        <div class="bg-gradient-to-r from-panama-blue-light to-white rounded-2xl border border-panama-blue/20 p-6">
+            <h3 class="font-black text-panama-blue text-lg mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-panama-gold">info</span> Información Importante
+            </h3>
+            
+            <div class="space-y-3 text-sm text-gray-700">
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-panama-blue text-[18px] flex-shrink-0">check_circle</span>
+                    <p><strong>Comisión de plataforma:</strong> 5% sobre el precio final de venta. Se descuenta automáticamente.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-panama-blue text-[18px] flex-shrink-0">check_circle</span>
+                    <p><strong>Pujas vinculantes:</strong> Todas las pujas son compromisos de compra. El ganador está obligado a completar la transacción.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-panama-blue text-[18px] flex-shrink-0">check_circle</span>
+                    <p><strong>Extensión automática:</strong> Si hay una puja en los últimos 5 minutos, la subasta se extiende 10 minutos más.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-panama-blue text-[18px] flex-shrink-0">check_circle</span>
+                    <p><strong>Visibilidad:</strong> Tu anuncio aparecerá en la sección destacada de "Subastas en Vivo" en la página principal.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <button type="submit" 
+                    class="flex-1 bg-gradient-to-r from-panama-gold to-orange-500 hover:from-panama-gold-hover hover:to-orange-600 text-white py-4 rounded-xl font-black shadow-lg shadow-panama-gold/30 transition-all text-lg flex items-center justify-center gap-2 transform hover:-translate-y-0.5">
+                <span class="material-icons-round">rocket_launch</span>
+                ¡Iniciar Subasta Ahora!
+            </button>
+            
+            <a href="{{ url_for('listings.details', listing_id=listing.id) }}" 
+               class="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 py-4 rounded-xl font-black transition-all text-lg flex items-center justify-center gap-2">
+                <span class="material-icons-round">cancel</span>
+                Cancelar
+            </a>
+        </div>
+    </form>
+
+    <!-- Advertencia Final -->
+    <div class="mt-8 bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
+        <span class="material-icons-round text-red-500 text-3xl flex-shrink-0">warning</span>
+        <div>
+            <h4 class="font-black text-red-800 mb-2">⚠️ Atención: Esta acción no se puede deshacer</h4>
+            <p class="text-sm text-red-700">
+                Una vez que inicies la subasta, no podrás cancelarla ni modificar el precio de salida. 
+                Asegúrate de que toda la información sea correcta antes de continuar.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDurationPreview() {
+    const selected = document.querySelector('input[name="duration_hours"]:checked');
+    if (!selected) return;
+    
+    const hours = parseInt(selected.value);
+    const now = new Date();
+    const endDate = new Date(now.getTime() + (hours * 60 * 60 * 1000));
+    
+    const formatted = endDate.toLocaleDateString('es-PA', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    document.getElementById('end-date-preview').textContent = formatted;
+}
+
+// Inicializar al cargar
+document.addEventListener('DOMContentLoaded', updateDurationPreview);
+</script>
+{% endblock %}

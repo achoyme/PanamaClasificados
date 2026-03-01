@@ -2,7 +2,7 @@
 {% block title %}Inicio{% endblock %}
 {% block content %}
 <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    
+    <!-- Banner Principal -->
     <div class="relative w-full h-64 md:h-80 mb-8 bg-gradient-to-r from-amazon-base to-amazon-light rounded-xl flex items-center overflow-hidden shadow-sm">
         <div class="z-10 w-full md:w-2/3 p-8 md:p-12">
             <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">Encuentra todo lo que necesitas, al mejor precio.</h1>
@@ -16,19 +16,23 @@
         </div>
     </div>
 
+    <!-- Sección de Anuncios -->
     <div class="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <h2 class="text-xl md:text-2xl font-bold text-amazon-base">Clasificados Destacados y Recientes</h2>
-        <a href="{{ url_for('listings.index') }}" class="text-blue-600 hover:text-amazon-hover hover:underline text-sm font-bold flex items-center">Ver todos <span class="material-icons-round text-sm ml-1">arrow_forward</span></a>
+        <a href="{{ url_for('listings.index') }}" class="text-blue-600 hover:text-amazon-hover hover:underline text-sm font-bold flex items-center">
+            Ver todos <span class="material-icons-round text-sm ml-1">arrow_forward</span>
+        </a>
     </div>
 
     {% if listings %}
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
         {% for listing in listings %}
-        
-        <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all flex flex-col h-full group relative overflow-hidden
-            {% if listing.tier == 'Premium' %} border-2 border-amazon-accent 
-            {% elif listing.tier == 'Profesional' %} border-2 border-amazon-light 
-            {% else %} border border-gray-200 {% endif %}">
+        <a href="{{ url_for('listings.details', listing_id=listing.id) }}" 
+           class="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all flex flex-col h-full group relative overflow-hidden
+           {% if listing.tier == 'Premium' %} border-2 border-amazon-accent
+           {% elif listing.tier == 'Profesional' %} border-2 border-amazon-light
+           {% else %} border border-gray-200 {% endif %}"
+           aria-label="Ver anuncio: {{ listing.title | e }}">
             
             {% if listing.tier == 'Premium' %}
             <div class="absolute top-0 left-0 bg-amazon-accent text-amazon-base text-[10px] md:text-xs font-black px-3 py-1 rounded-br-lg z-10 shadow-sm flex items-center gap-1">
@@ -39,30 +43,28 @@
                 RECOMENDADO
             </div>
             {% endif %}
-
+            
             <div class="relative w-full aspect-square bg-[#eaeded] flex items-center justify-center p-4">
-                <img src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/400x400?text=Sin+Imagen' }}" 
-                     alt="Imagen de {{ listing.title }}"
+                <img src="{{ listing.images[0].image_url if listing.images else 'https://placehold.co/400x400?text=Sin+Imagen' }}"
+                     alt="Imagen de {{ listing.title | e }}"
                      onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=Sin+Imagen';"
-                     class="absolute inset-0 w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105 p-3">
+                     class="absolute inset-0 w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105 p-3"
+                     loading="lazy">
             </div>
             
             <div class="p-4 flex flex-col flex-1">
-                <h3 class="text-sm md:text-base text-gray-900 font-medium line-clamp-2 group-hover:text-blue-600 transition-colors leading-snug">{{ listing.title }}</h3>
-                
-                <div class="text-[11px] text-gray-500 mt-1 capitalize">{{ listing.condition if listing.condition else 'Usado' }}</div>
-                
+                <h3 class="text-sm md:text-base text-gray-900 font-medium line-clamp-2 group-hover:text-blue-600 transition-colors leading-snug">{{ listing.title | e }}</h3>
+                <div class="text-[11px] text-gray-500 mt-1 capitalize">{{ listing.condition | default('Usado', true) | e }}</div>
                 <div class="mt-auto pt-3">
-                    <span class="text-xl md:text-2xl font-black text-gray-900 block leading-none">${{ listing.price }}</span>
+                    <span class="text-xl md:text-2xl font-black text-gray-900 block leading-none">${{ listing.price | default(0, true) }}</span>
                     {% if listing.is_negotiable %}
                     <span class="text-[11px] text-gray-500 line-through block mt-1">O mejor oferta</span>
                     {% endif %}
                 </div>
-
                 <div class="mt-3 pt-3 border-t border-gray-100">
                     <span class="text-[11px] font-bold text-gray-600 flex items-center gap-1">
                         <span class="material-icons-round text-[14px] text-gray-400">place</span>
-                        <span class="truncate">{{ listing.district }}, {{ listing.province }}</span>
+                        <span class="truncate">{{ listing.district | e }}, {{ listing.province | e }}</span>
                     </span>
                 </div>
             </div>

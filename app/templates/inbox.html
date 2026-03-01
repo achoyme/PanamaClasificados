@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Mi Bandeja de Entrada{% endblock %}
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="flex items-center gap-3 mb-6">
+        <span class="material-icons-round text-4xl text-amazon-base">inbox</span>
+        <div>
+            <h1 class="text-2xl md:text-3xl font-black text-gray-900">Bandeja de Entrada</h1>
+            <p class="text-sm text-gray-600">Mensajes de compradores interesados en tus artículos.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-4">
+            {% for msg in messages %}
+            <div class="bg-white rounded-xl shadow-sm border {% if not msg.is_read %}border-blue-500 border-l-4{% else %}border-gray-200{% endif %} overflow-hidden transition-all hover:shadow-md">
+                <div class="p-5 md:p-6 flex flex-col md:flex-row gap-6">
+                    
+                    <div class="md:w-1/4 flex flex-col border-b md:border-b-0 md:border-r border-gray-100 pb-4 md:pb-0 md:pr-4">
+                        <span class="text-xs text-gray-400 font-bold mb-1">INTERESADO EN:</span>
+                        <a href="{{ url_for('listings.details', listing_id=msg.listing.id) }}" class="font-bold text-blue-600 hover:underline line-clamp-2 text-sm">{{ msg.listing.title }}</a>
+                        <img src="{{ msg.listing.images[0].image_url if msg.listing.images|length > 0 else 'https://placehold.co/100x100?text=Foto' }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Foto';" class="w-16 h-16 object-cover rounded mt-3 border border-gray-200">
+                    </div>
+
+                    <div class="md:w-3/4 flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-black text-gray-900 text-lg flex items-center gap-2">
+                                    {{ msg.sender_name }} 
+                                    {% if not msg.is_read %}<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Nuevo</span>{% endif %}
+                                </h3>
+                                <p class="text-sm text-gray-500 flex items-center gap-3 mt-1">
+                                    <span>📧 {{ msg.sender_email }}</span>
+                                    {% if msg.sender_phone %}<span>📱 {{ msg.sender_phone }}</span>{% endif %}
+                                </p>
+                            </div>
+                            <span class="text-xs text-gray-400 font-bold">{{ msg.created_at.strftime('%d %b, %I:%M %p') }}</span>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg text-gray-700 text-sm border border-gray-100 whitespace-pre-line leading-relaxed mb-4">
+                            "{{ msg.content }}"
+                        </div>
+
+                        <div class="mt-auto flex items-center gap-3">
+                            {% if msg.sender_phone %}
+                                <a href="https://wa.me/507{{ msg.sender_phone | replace('-', '') | replace(' ', '') }}?text=Hola%20{{ msg.sender_name }},%20te%20escribo%20sobre%20mi%20anuncio%20en%20Panama%20Classifieds:%20{{ msg.listing.title }}" target="_blank" class="bg-[#25D366] hover:bg-[#1ebd5a] text-white px-4 py-2 rounded font-bold text-sm flex items-center gap-1 transition-colors">
+                                    <span class="material-icons-round text-[16px]">whatsapp</span> Responder al WhatsApp
+                                </a>
+                            {% endif %}
+                            
+                            <a href="mailto:{{ msg.sender_email }}?subject=Respuesta sobre: {{ msg.listing.title }}" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded font-bold text-sm flex items-center gap-1 transition-colors">
+                                <span class="material-icons-round text-[16px]">reply</span> Responder por Correo
+                            </a>
+
+                            {% if not msg.is_read %}
+                            <form action="{{ url_for('main.mark_read', msg_id=msg.id) }}" method="POST" class="ml-auto">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="text-blue-600 hover:underline text-xs font-bold flex items-center gap-1">
+                                    <span class="material-icons-round text-[14px]">done_all</span> Marcar como leído
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-16 text-center">
+            <span class="material-icons-round text-7xl text-gray-200 mb-4 block">drafts</span>
+            <h2 class="text-xl font-bold text-gray-900">Tu bandeja está vacía</h2>
+            <p class="text-gray-500 mt-2">Aún no tienes mensajes nuevos de compradores.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

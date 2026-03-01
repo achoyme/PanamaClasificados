@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil de {{ seller.first_name }} | Panama Classifieds{% endblock %}
+
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div class="h-32 bg-gradient-to-r from-panama-blue to-panama-blue-light"></div>
+        <div class="px-8 pb-8 relative">
+            <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-end -mt-16 sm:-mt-12 mb-6">
+                <div class="w-32 h-32 bg-white rounded-full p-1.5 shadow-md flex-shrink-0">
+                    <div class="w-full h-full bg-gray-100 rounded-full overflow-hidden flex items-center justify-center text-4xl font-black text-panama-blue">
+                        {% if seller.profile_image_url %}
+                            <img src="{{ seller.profile_image_url }}" alt="{{ seller.first_name }}" class="w-full h-full object-cover">
+                        {% else %}
+                            {{ seller.first_name[0] | upper }}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="flex-1 text-center sm:text-left">
+                    <h1 class="text-3xl font-black text-panama-blue flex items-center justify-center sm:justify-start gap-2">
+                        {{ seller.first_name }} {{ seller.last_name }}
+                        {% if seller.is_verified %}
+                        <span class="material-icons-round text-blue-500 text-2xl" title="Cuenta Verificada">verified</span>
+                        {% endif %}
+                    </h1>
+                    <p class="text-gray-500 font-medium">Miembro desde {{ seller.created_at.strftime('%B %Y') }}</p>
+                </div>
+
+                <div class="text-center sm:text-right bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
+                    <div class="text-sm font-black text-gray-500 uppercase tracking-widest mb-1">Reputación</div>
+                    <div class="flex items-center justify-center sm:justify-end gap-1 text-panama-gold">
+                        <span class="text-3xl font-black text-gray-900 mr-1">{{ avg_rating }}</span>
+                        <span class="material-icons-round text-2xl">star</span>
+                    </div>
+                    <div class="text-xs text-gray-500 font-medium mt-1">Basado en {{ reviews|length }} calificaciones</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-1 space-y-6">
+            
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-black text-panama-blue text-lg mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-panama-gold">rate_review</span> Calificar Vendedor
+                </h3>
+                
+                {% if current_user.is_authenticated %}
+                    {% if current_user.id != seller.id %}
+                        <form action="{{ url_for('main.leave_review', user_id=seller.id) }}" method="POST" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            
+                            <div class="flex justify-center gap-2 flex-row-reverse" id="star-rating">
+                                <input type="radio" id="star5" name="rating" value="5" class="hidden peer" {% if user_review and user_review.rating == 5 %}checked{% endif %} required/>
+                                <label for="star5" class="material-icons-round text-4xl text-gray-300 peer-checked:text-panama-gold hover:text-panama-gold cursor-pointer transition-colors">star</label>
+                                
+                                <input type="radio" id="star4" name="rating" value="4" class="hidden peer" {% if user_review and user_review.rating == 4 %}checked{% endif %}/>
+                                <label for="star4" class="material-icons-round text-4xl text-gray-300 peer-checked:text-panama-gold hover:text-panama-gold cursor-pointer transition-colors">star</label>
+                                
+                                <input type="radio" id="star3" name="rating" value="3" class="hidden peer" {% if user_review and user_review.rating == 3 %}checked{% endif %}/>
+                                <label for="star3" class="material-icons-round text-4xl text-gray-300 peer-checked:text-panama-gold hover:text-panama-gold cursor-pointer transition-colors">star</label>
+                                
+                                <input type="radio" id="star2" name="rating" value="2" class="hidden peer" {% if user_review and user_review.rating == 2 %}checked{% endif %}/>
+                                <label for="star2" class="material-icons-round text-4xl text-gray-300 peer-checked:text-panama-gold hover:text-panama-gold cursor-pointer transition-colors">star</label>
+                                
+                                <input type="radio" id="star1" name="rating" value="1" class="hidden peer" {% if user_review and user_review.rating == 1 %}checked{% endif %}/>
+                                <label for="star1" class="material-icons-round text-4xl text-gray-300 peer-checked:text-panama-gold hover:text-panama-gold cursor-pointer transition-colors">star</label>
+                            </div>
+
+                            <textarea name="comment" rows="3" placeholder="¿Cómo fue tu experiencia de compra?" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-panama-blue focus:ring-2 focus:ring-panama-blue/20 outline-none text-sm transition-all resize-none">{{ user_review.comment if user_review else '' }}</textarea>
+                            
+                            <button type="submit" class="w-full bg-panama-blue hover:bg-panama-blue/90 text-white font-black py-3 rounded-xl transition-colors shadow-md">
+                                {{ 'Actualizar Calificación' if user_review else 'Publicar Calificación' }}
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="bg-gray-50 text-gray-500 p-4 rounded-xl text-center text-sm font-bold">
+                            Este es tu perfil público.
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="bg-panama-blue-light/20 p-4 rounded-xl text-sm text-panama-blue font-medium text-center">
+                        <a href="{{ url_for('auth.login') }}" class="font-black hover:underline">Inicia sesión</a> para calificar.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-black text-panama-blue text-lg mb-4 border-b border-gray-100 pb-3">Comentarios ({{ reviews|length }})</h3>
+                <div class="space-y-5">
+                    {% for r in reviews %}
+                    <div class="pb-4 {% if not loop.last %}border-b border-gray-100{% endif %}">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-black text-gray-800 text-sm">{{ r.reviewer.first_name }} {{ r.reviewer.last_name[:1] }}.</span>
+                            <div class="flex text-panama-gold text-sm">
+                                {% for i in range(r.rating) %}<span class="material-icons-round text-[14px]">star</span>{% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 font-medium leading-relaxed">{{ r.comment }}</p>
+                        <p class="text-[10px] text-gray-400 font-bold mt-2">{{ r.created_at.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-6 text-gray-400">
+                        <span class="material-icons-round text-4xl mb-2">speaker_notes_off</span>
+                        <p class="text-sm font-bold">Sin reseñas aún.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                <h2 class="font-black text-panama-blue text-2xl mb-6 flex items-center gap-2">
+                    <span class="material-icons-round text-panama-gold">storefront</span> Catálogo a la Venta
+                </h2>
+
+                {% if listings %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {% for item in listings %}
+                    <a href="{{ url_for('listings.details', listing_id=item.id) }}" class="group border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all flex flex-col">
+                        <div class="relative w-full pt-[75%] bg-gray-100">
+                            <img src="{{ item.images[0].image_url if item.images else 'https://placehold.co/400x300?text=Sin+Imagen' }}" alt="{{ item.title }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-4 flex flex-col flex-grow">
+                            <h3 class="font-bold text-gray-800 line-clamp-2 text-sm mb-2 group-hover:text-panama-red transition-colors">{{ item.title }}</h3>
+                            <p class="font-black text-xl text-panama-blue mt-auto">${{ item.price }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="material-icons-round text-5xl text-gray-300 mb-3">inventory_2</span>
+                    <p class="text-gray-500 font-bold">Este vendedor no tiene artículos activos en este momento.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* CSS Mágico para que las estrellas se iluminen de derecha a izquierda al pasar el mouse */
+    #star-rating label:hover,
+    #star-rating label:hover ~ label,
+    #star-rating input:checked ~ label {
+        color: #D97706; /* panama-gold */
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}{{ auction.listing.title }} - Subasta en Vivo{% endblock %}
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl shadow-lg border-2 border-panama-gold overflow-hidden">
+                <div class="bg-gradient-to-r from-panama-gold to-orange-400 p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-lg flex items-center gap-2">
+                            <span class="material-icons-round animate-pulse">local_fire_department</span>
+                            SUBASTA EN VIVO
+                        </span>
+                        <span id="timer" class="font-mono text-2xl font-black bg-black/20 px-4 py-1 rounded-lg">
+                            --:--:--
+                        </span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <img src="{{ auction.listing.images[0].image_url if auction.listing.images else 'https://placehold.co/600x400' }}"
+                         class="w-full h-64 object-cover rounded-xl mb-4">
+                    <h1 class="text-2xl font-black text-panama-blue mb-2">{{ auction.listing.title }}</h1>
+                    
+                    <div class="text-sm text-gray-500 flex gap-4 border-b border-gray-100 pb-4 mb-4">
+                        <span>Vendedor: <b>{{ auction.seller.first_name }}</b></span>
+                        <span>Envío: <b>${{ auction.shipping_cost }}</b></span>
+                    </div>
+
+                    <p class="text-gray-600">{{ auction.listing.description[:200] }}...</p>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-panama-blue">history</span>
+                    Últimas Pujas
+                </h3>
+                <div id="bids-list" class="space-y-2 max-h-64 overflow-y-auto">
+                    {% for bid in bids %}
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg {% if loop.first %}border-2 border-panama-gold bg-yellow-50{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-panama-blue text-white rounded-full flex items-center justify-center font-bold">
+                                {{ bid.bidder.first_name[0] }}
+                            </div>
+                            <span class="font-medium">{{ bid.bidder.first_name }} ***</span>
+                            {% if loop.first %}
+                            <span class="bg-panama-gold text-white text-xs px-2 py-0.5 rounded font-bold">LÍDER</span>
+                            {% endif %}
+                        </div>
+                        <span class="font-black text-xl text-panama-blue">${{ bid.amount | float }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-center py-4">Sé el primero en pujar</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-black text-panama-blue text-lg mb-4 flex items-center gap-2">
+                    <span class="material-icons-round">gavel</span>
+                    Términos y Condiciones Legales de la Subasta
+                </h3>
+                <div class="text-sm text-gray-700 space-y-3">
+                    <p><strong>1. Compromiso de Compra:</strong> Al realizar una puja, el usuario se compromete legalmente a completar la compra si resulta ganador.</p>
+                    <p><strong>2. Pujas Automáticas:</strong> Ingresa el máximo que quieres pagar. El sistema pujará por ti automáticamente solo lo necesario para mantenerte ganando.</p>
+                    <p><strong>3. Comisión de Plataforma:</strong> Se cobra una comisión del {{ auction.platform_fee_percent }}% sobre el precio final de venta, pagadera por el ganador.</p>
+                    <p><strong>4. Pago y Entrega:</strong> Una vez finalizada la subasta, comprador y vendedor tienen 7 días hábiles para completar el pago y la entrega del artículo.</p>
+                    <p><strong>5. Ley Aplicable:</strong> Estas subastas se rigen por las leyes de la República de Panamá.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 sticky top-24">
+                <div class="text-center mb-6">
+                    <p class="text-sm text-gray-500 font-bold uppercase tracking-wider">Precio Actual</p>
+                    <p id="current-price" class="text-5xl font-black text-panama-blue my-2">${{ auction.current_price | float }}</p>
+                    <p class="text-xs text-gray-400">{{ auction.bids.count() }} pujas realizadas</p>
+                    
+                    {% if auction.reserve_price %}
+                        {% if auction.current_price < auction.reserve_price %}
+                        <span class="inline-block mt-2 bg-gray-100 text-gray-600 text-[11px] font-bold px-2 py-1 rounded border border-gray-300">Precio de reserva no alcanzado</span>
+                        {% else %}
+                        <span class="inline-block mt-2 bg-green-100 text-green-700 text-[11px] font-bold px-2 py-1 rounded border border-green-300">Reserva superada (Se venderá)</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                {% if auction.status == 'Active' and auction.end_time > now %}
+                    {% if current_user.is_authenticated and current_user.id != auction.seller_id %}
+                        
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                            <label class="block text-sm font-bold text-blue-900 mb-2">Tu puja máxima</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="custom-bid" step="0.01" min="{{ min_next_bid }}" placeholder="Mín: ${{ min_next_bid }}" class="flex-1 px-3 py-2 border border-gray-300 rounded focus:border-blue-500 outline-none font-bold">
+                                <button onclick="placeProxyBid()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded font-bold transition-colors">Pujar</button>
+                            </div>
+                            <p class="text-[10px] text-blue-700 mt-2 leading-tight"><b>Sistema automático:</b> Introduce el máximo que estás dispuesto a pagar. Pujaremos por ti con el incremento mínimo necesario para mantenerte ganando.</p>
+                        </div>
+                        
+                        {% if user_highest_bid %}
+                            {% if user_highest_bid.max_auto_bid %}
+                            <div class="text-xs text-center text-blue-800 mb-4 bg-blue-100 border border-blue-200 p-2 rounded shadow-sm">
+                                Tu límite máximo actual es: <b class="text-blue-900 text-sm">${{ user_highest_bid.max_auto_bid | float }}</b>
+                            </div>
+                            {% else %}
+                            <div class="text-xs text-center text-gray-600 mb-4 bg-gray-100 border border-gray-200 p-2 rounded">
+                                Tu puja manual actual es: <b>${{ user_highest_bid.amount | float }}</b>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if auction.buy_now_price %}
+                        <div class="border-t border-gray-200 pt-4 mt-4">
+                            <p class="text-center text-sm text-gray-500 mb-2">O compra ahora sin esperar</p>
+                            <form method="POST" action="{{ url_for('auctions.buy_now', auction_id=auction.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" 
+                                        class="w-full bg-panama-gold hover:bg-panama-gold-hover text-white py-3 rounded-lg font-black text-lg shadow-lg transition-all flex items-center justify-center gap-2"
+                                        onclick="return confirm('¿Confirmar compra inmediata por ${{ auction.buy_now_price }}?')">
+                                    <span class="material-icons-round">flash_on</span>
+                                    COMPRAR AHORA ${{ auction.buy_now_price | float }}
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                    {% elif current_user.id == auction.seller_id %}
+                        <div class="bg-gray-100 p-4 rounded-lg text-center border border-gray-200">
+                            <span class="material-icons-round text-gray-400 text-3xl block mb-1">storefront</span>
+                            <p class="text-gray-600 font-medium">Eres el vendedor de esta subasta</p>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" 
+                           class="block w-full text-center bg-panama-blue text-white py-3 rounded-lg font-bold transition-all">
+                            Inicia sesión para pujar
+                        </a>
+                    {% endif %}
+                
+                {% else %}
+                    <div class="bg-gray-100 border border-gray-300 p-5 rounded-lg text-center">
+                        <span class="material-icons-round text-gray-500 text-4xl mb-2">gavel</span>
+                        <h3 class="font-black text-gray-800 text-lg">Subasta Finalizada</h3>
+                        
+                        {% if auction.status == 'Ended' and auction.winner %}
+                            <div class="bg-green-50 border border-green-200 rounded p-3 mt-3">
+                                <p class="text-green-800 font-bold">¡Artículo Vendido!</p>
+                                <p class="text-sm text-green-700 mt-1">Ganador: {{ auction.winner.first_name }}</p>
+                                
+                                {% if current_user.id == auction.winner_id or current_user.id == auction.seller_id %}
+                                <a href="{{ url_for('auctions.checkout', auction_id=auction.id) }}" class="mt-3 block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm transition-colors shadow-sm">
+                                    <span class="material-icons-round text-[14px] align-middle">receipt_long</span> Ver Desglose de Pago
+                                </a>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="bg-red-50 border border-red-200 rounded p-3 mt-3">
+                                <p class="text-red-800 font-bold">Artículo no vendido</p>
+                                {% if auction.reserve_price %}
+                                <p class="text-xs text-red-600 mt-1">El precio de reserva no fue alcanzado.</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-xs text-blue-800 flex items-start gap-2">
+                        <span class="material-icons-round text-sm">verified_user</span>
+                        <span>Las pujas son compromisos de compra. El ganador asume el costo de envío y comisión.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+const socket = io();
+const auctionId = {{ auction.id }};
+let endTime = new Date('{{ auction.end_time.isoformat() }}Z'); 
+
+socket.emit('join_auction', {auction_id: auctionId});
+
+// Tu lógica visual original de añadir al historial en vivo
+socket.on('new_bid', (data) => {
+    document.getElementById('current-price').textContent = '$' + parseFloat(data.amount).toFixed(2);
+    
+    const bidsList = document.getElementById('bids-list');
+    const newBid = document.createElement('div');
+    newBid.className = 'flex justify-between items-center p-3 bg-yellow-50 border-2 border-panama-gold rounded-lg animate-pulse';
+    newBid.innerHTML = `
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-panama-blue text-white rounded-full flex items-center justify-center font-bold">?</div>
+            <span class="font-medium">${data.bidder || 'Usuario'} ***</span>
+            <span class="bg-panama-gold text-white text-xs px-2 py-0.5 rounded font-bold">LÍDER</span>
+        </div>
+        <span class="font-black text-xl text-panama-blue">$${parseFloat(data.amount).toFixed(2)}</span>
+    `;
+    bidsList.insertBefore(newBid, bidsList.firstChild);
+    setTimeout(() => newBid.classList.remove('animate-pulse'), 1000);
+});
+
+// Tu temporizador original en la cabecera
+function updateTimer() {
+    const now = new Date();
+    const diff = endTime - now;
+    const timerEl = document.getElementById('timer');
+    
+    if (diff <= 0) {
+        timerEl.textContent = 'FINALIZADA';
+        setTimeout(() => location.reload(), 2000); 
+        return;
+    }
+    
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    
+    timerEl.textContent = (d > 0 ? `${d}d ` : '') + `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+setInterval(updateTimer, 1000);
+updateTimer();
+
+function placeProxyBid() {
+    const amount = document.getElementById('custom-bid').value;
+    if(!amount) return alert('Ingresa un monto válido.');
+    
+    fetch(`/subastas/${auctionId}/pujar`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: `amount=${amount}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) {
+            alert(data.error);
+            location.reload(); 
+        } else {
+            if(data.msg) alert(data.msg); 
+            location.reload(); 
+        }
+    });
+}
+</script>
+{% endblock %}

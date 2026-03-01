@@ -6,6 +6,8 @@ from app.services.listing_service import ListingService
 from app.utils.decorators import rate_limit
 from app import db
 from app.forms import ListingValidatorForm
+# CAMBIO: Importamos 'func' para poder contar los anuncios dinámicamente
+from sqlalchemy import func
 
 listings_bp = Blueprint('listings', __name__, url_prefix='/listings')
 listing_service = ListingService()
@@ -19,7 +21,18 @@ def index():
         'category_id': request.args.get('category_id', type=int),
         'page': request.args.get('page', 1, type=int)
     }
-    categories = Category.query.all()
+    
+    # CAMBIO: En lugar de Category.query.all(), hacemos un "Join" para contar los anuncios activos.
+    categories_query = db.session.query(
+        Category.id, 
+        Category.name, 
+        func.count(Listing.id).label('total_listings')
+    ).outerjoin(Listing, (Listing.category_id == Category.id) & (Listing.status.in_(['Active', 'Auction'])))\
+     .group_by(Category.id).all()
+    
+    # Convertimos el resultado a una lista de diccionarios para que Jinja lo entienda
+    categories = [{'id': c.id, 'name': c.name, 'total_listings': c.total_listings} for c in categories_query]
+
     result = listing_service.search_listings(filters)
     
     return render_template('listings/index.html', 
@@ -36,10 +49,12 @@ def details(listing_id):
     if not listing:
         flash('Anuncio no encontrado.', 'error')
         return redirect(url_for('main.index'))
-    return render_template('listings/details.html', listing=listing)
+        
+    # ✅ CORRECCIÓN: Agregamos now=datetime.utcnow() para que la plantilla no colapse con subastas
+    return render_template('listings/details.html', listing=listing, now=datetime.utcnow())
 
 # ==========================================
-# NUEVO: PREGUNTAS Y RESPUESTAS (MERCADOLIBRE)
+# PREGUNTAS Y RESPUESTAS (MERCADOLIBRE)
 # ==========================================
 @listings_bp.route('/<int:listing_id>/ask', methods=['POST'])
 @login_required

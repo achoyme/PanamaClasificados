@@ -40,7 +40,11 @@
                 <p class="text-xl font-black text-gray-900 mb-3">${{ listing.price }}</p>
 
                 <div class="mt-auto">
-                    {% if listing.expires_at and listing.expires_at < now %}
+                    {% if listing.status == 'Sold' %}
+                        <div class="flex items-center gap-1 text-xs font-bold text-red-800 bg-red-100 p-2 rounded border border-red-300">
+                            <span class="material-icons-round text-[14px]">sell</span> ¡Vendido!
+                        </div>
+                    {% elif listing.expires_at and listing.expires_at < now %}
                         <div class="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 p-2 rounded border border-red-200">
                             <span class="material-icons-round text-[14px]">error_outline</span> Expirado (Desactivado)
                         </div>
@@ -52,6 +56,13 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
+                    {% if listing.status == 'Active' and listing.expires_at > now %}
+                    <form method="POST" action="{{ url_for('listings.mark_sold', listing_id=listing.id) }}" class="col-span-2 mb-1">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="w-full text-center text-xs font-bold text-yellow-900 bg-yellow-400 border border-yellow-500 hover:bg-yellow-500 py-2 rounded transition-colors shadow-sm" onclick="return confirm('¿Confirmas que vendiste este artículo? Se retirará de la plataforma en 24 horas.');">¡Marcar como Vendido!</button>
+                    </form>
+                    {% endif %}
+                    
                     <a href="{{ url_for('listings.details', listing_id=listing.id) }}" class="text-center text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 py-2 rounded transition-colors">Ver</a>
                     <a href="{{ url_for('listings.edit', listing_id=listing.id) }}" class="text-center text-xs font-bold text-amazon-base bg-amazon-accent hover:bg-amazon-hover py-2 rounded transition-colors">
                         {% if listing.expires_at and listing.expires_at < now %}Republicar{% else %}Editar{% endif %}

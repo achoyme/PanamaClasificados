@@ -5,42 +5,41 @@ from sqlalchemy.orm import relationship
 
 class Listing(db.Model):
     __tablename__ = 'listings'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     
-    title = db.Column(db.String(150), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Numeric(10, 2), nullable=False)
-    
-    province = db.Column(db.String(100), nullable=False)
-    district = db.Column(db.String(100), nullable=False)
-    city = db.Column(db.String(100))
-    condition = db.Column(db.String(50))
-    is_negotiable = db.Column(db.Boolean, default=False)
-    
-    # NUEVO: Atributos Dinámicos (JSON) para guardar Marca, Año, Habitaciones, etc.
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
+    title = Column(String(150), nullable=False)
+    description = Column(Text, nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
+    province = Column(String(100), nullable=False)
+    district = Column(String(100), nullable=False)
+    city = Column(String(100))
+    condition = Column(String(50))
+    is_negotiable = Column(Boolean, default=False)
     attributes = db.Column(db.JSON)
-
     tier = db.Column(db.String(50), default='Gratis')
-    duration_days = db.Column(db.Integer, default=30)
+    duration_days = Column(Integer, default=30)
+    status = Column(String(20), default='Active')
+    view_count = Column(Integer, default=0)
+    virtual_tour_url = Column(String(500))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)
     
-    status = db.Column(db.String(20), default='Active')
-    view_count = db.Column(db.Integer, default=0)
-    
-    virtual_tour_url = db.Column(db.String(500))
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    expires_at = db.Column(db.DateTime)
-
-    # Relaciones (Completas y conectadas)
+    # ✅ RELACIONES (TODAS con back_populates)
     user = relationship('User', back_populates='listings')
     category = relationship('Category', back_populates='listings')
     images = relationship('Image', back_populates='listing', cascade='all, delete-orphan', order_by='Image.display_order')
     reports = relationship('Report', back_populates='listing', cascade='all, delete-orphan')
     ai_analysis = relationship('AIAnalysis', back_populates='listing', uselist=False, cascade='all, delete-orphan')
-
+    questions = relationship('Question', back_populates='listing', cascade='all, delete-orphan', order_by='Question.created_at.desc()')
+    
+    # ✅ CORRECCIÓN: Agregar contact_messages AQUÍ
+    contact_messages = relationship('ContactMessage', back_populates='listing', cascade='all, delete-orphan')
+    
+    # ✅ CORRECCIÓN: Agregar auction AQUÍ (si existe el modelo)
+    auction = relationship('Auction', back_populates='listing', uselist=False)
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -53,16 +52,19 @@ class Listing(db.Model):
 
 class Image(db.Model):
     __tablename__ = 'images'
+    
     id = Column(Integer, primary_key=True)
     listing_id = Column(Integer, ForeignKey('listings.id'), nullable=False)
     image_url = Column(String(500), nullable=False)
     thumbnail_url = Column(String(500))
     display_order = Column(Integer, default=0)
     is_primary = Column(Boolean, default=False)
+    
     listing = relationship('Listing', back_populates='images')
 
 class Category(db.Model):
     __tablename__ = 'categories'
+    
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     slug = Column(String(100), nullable=False, unique=True)
@@ -71,10 +73,12 @@ class Category(db.Model):
     parent_id = Column(Integer, ForeignKey('categories.id'))
     display_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
+    
     listings = relationship('Listing', back_populates='category')
 
 class Report(db.Model):
     __tablename__ = 'reports'
+    
     id = Column(Integer, primary_key=True)
     listing_id = Column(Integer, ForeignKey('listings.id'), nullable=False)
     reported_by_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
@@ -86,11 +90,13 @@ class Report(db.Model):
     review_notes = Column(String(1000))
     action_taken = Column(String(100))
     created_at = Column(DateTime, default=datetime.utcnow)
+    
     listing = relationship('Listing', back_populates='reports')
     reported_by = relationship('User', foreign_keys=[reported_by_user_id])
 
 class AIAnalysis(db.Model):
     __tablename__ = 'ai_analysis'
+    
     id = Column(Integer, primary_key=True)
     listing_id = Column(Integer, ForeignKey('listings.id'), nullable=False)
     suggested_category_id = Column(Integer, ForeignKey('categories.id'))
@@ -106,4 +112,5 @@ class AIAnalysis(db.Model):
     has_suspicious_keywords = Column(Boolean, default=False)
     fraud_risk_score = Column(Numeric(5, 2))
     fraud_risk_level = Column(String(20))
+    
     listing = relationship('Listing', back_populates='ai_analysis')

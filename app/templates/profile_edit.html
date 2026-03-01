@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Configuración de Perfil y Logística{% endblock %}
+{% block content %}
+<div class="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <span class="material-icons-round text-4xl text-amazon-base">manage_accounts</span>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-gray-900">Configuración de Tienda</h1>
+                <p class="text-sm text-gray-600">Actualiza tus datos y opciones de entrega directa.</p>
+            </div>
+        </div>
+        <a href="{{ url_for('main.seller_profile', user_id=current_user.id) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded font-bold text-sm transition-colors border border-gray-300 flex items-center gap-1">
+            <span class="material-icons-round text-[18px]">visibility</span> Ver mi Perfil Público
+        </a>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.edit_profile') }}" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200 space-y-8">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div>
+            <h3 class="font-black text-gray-900 border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-blue-600 text-xl">person</span> Información Principal
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nombre (o Nombre del Local)</label>
+                    <input type="text" name="first_name" value="{{ current_user.first_name }}" required class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Apellido</label>
+                    <input type="text" name="last_name" value="{{ current_user.last_name }}" required class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Correo Electrónico</label>
+                    <input type="email" value="{{ current_user.email }}" disabled class="w-full px-4 py-2 border border-gray-300 rounded bg-gray-100 text-gray-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">WhatsApp / Celular Público</label>
+                    <input type="tel" name="phone_number" value="{{ current_user.phone_number or '' }}" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="font-black text-gray-900 border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-blue-600 text-xl">place</span> Ubicación Base
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Provincia</label>
+                    <select name="province" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
+                        <option value="">Selecciona...</option>
+                        {% set provs = ['Panamá', 'Panamá Oeste', 'Chiriquí', 'Colón', 'Coclé', 'Veraguas', 'Herrera', 'Los Santos', 'Bocas del Toro', 'Darién'] %}
+                        {% for p in provs %}
+                        <option value="{{ p }}" {% if current_user.province == p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Distrito</label>
+                    <input type="text" name="district" value="{{ current_user.district or '' }}" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Corregimiento</label>
+                    <input type="text" name="city" value="{{ current_user.city or '' }}" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="font-black text-blue-900 mb-2 flex items-center gap-2">
+                <span class="material-icons-round text-blue-600">local_shipping</span> Logística y Opciones de Entrega
+            </h3>
+            <p class="text-xs text-blue-700 mb-5">Indica cómo los compradores pueden recibir tus artículos de forma directa para evitar intermediarios.</p>
+            
+            <div class="mb-5">
+                <label class="flex items-center gap-3 bg-white p-3 border border-blue-200 rounded cursor-pointer hover:bg-blue-100 transition-colors">
+                    <input type="checkbox" name="has_physical_store" id="store-toggle" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" {% if current_user.has_physical_store %}checked{% endif %}>
+                    <div>
+                        <span class="block font-bold text-gray-900">Tengo un local / Almacén físico</span>
+                        <span class="block text-xs text-gray-500">Los clientes pueden ir a retirar o verse directamente allí.</span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Dirección exacta del Local o Punto de Encuentro</label>
+                <input type="text" name="store_address" value="{{ current_user.store_address or '' }}" placeholder="Ej: Vía España, Edificio X, Local 4 / Albrook Mall" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Servicios de Mensajería que ofreces</label>
+                <input type="text" name="delivery_methods" value="{{ current_user.delivery_methods or '' }}" placeholder="Ej: UnoExpress, Servientrega, Mensajero Propio, Fletes Chavale" class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amazon-accent outline-none bg-white">
+                <p class="text-[10px] text-gray-500 mt-1">Escribe los nombres separados por comas. Déjalo en blanco si no haces envíos.</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-gray-200">
+            <button type="submit" class="bg-amazon-accent hover:bg-amazon-hover text-amazon-base font-bold px-8 py-3 rounded shadow-sm transition-colors text-lg">Guardar Configuración</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

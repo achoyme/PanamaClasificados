@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Página no encontrada{% endblock %}
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center flex flex-col items-center justify-center min-h-[50vh]">
+    <span class="material-icons-round text-8xl text-amazon-accent mb-4 block drop-shadow-sm">explore_off</span>
+    <h1 class="text-4xl font-black text-amazon-base mb-2">¡Ups! Te saliste del mapa</h1>
+    <p class="text-gray-600 mb-8 max-w-md mx-auto text-lg">Parece que el artículo o la página que buscas ya no existe, fue eliminada o escrita incorrectamente.</p>
+    <a href="{{ url_for('main.index') }}" class="bg-amazon-accent hover:bg-amazon-hover text-amazon-base px-8 py-3 rounded-full font-bold transition-colors shadow-sm text-lg">
+        Volver a la página principal
+    </a>
+</div>
+{% endblock %}

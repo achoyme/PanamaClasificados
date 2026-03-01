@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Centro de Ayuda{% endblock %}
+{% block content %}
+<div class="max-w-[1000px] mx-auto px-4 py-10">
+    <h1 class="text-3xl font-black text-panama-blue mb-6">Centro de Ayuda</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="font-bold text-lg mb-3">🛒 Comprar</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li><a href="#" class="hover:text-panama-blue hover:underline">¿Cómo hacer una puja?</a></li>
+                <li><a href="#" class="hover:text-panama-blue hover:underline">Métodos de pago</a></li>
+            </ul>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="font-bold text-lg mb-3">📤 Vender</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li><a href="#" class="hover:text-panama-blue hover:underline">Cómo crear un anuncio</a></li>
+                <li><a href="#" class="hover:text-panama-blue hover:underline">Comisiones</a></li>
+            </ul>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="font-bold text-lg mb-3">🔒 Seguridad</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li><a href="{{ url_for('main.security_tips') }}" class="hover:text-panama-blue hover:underline">Consejos de seguridad</a></li>
+                <li><a href="{{ url_for('main.report_fraud') }}" class="hover:text-panama-blue hover:underline">Reportar fraude</a></li>
+            </ul>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="font-bold text-lg mb-3">📞 Contacto</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li><a href="mailto:soporte@panamaclassifieds.com" class="hover:text-panama-blue hover:underline">soporte@panamaclassifieds.com</a></li>
+                <li><a href="tel:+50712345678" class="hover:text-panama-blue hover:underline">+507 1234-5678</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

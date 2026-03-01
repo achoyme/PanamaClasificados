@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Subastas en Vivo{% endblock %}
+
+{% block content %}
+<div class="max-w-[1500px] mx-auto px-4 py-8">
+    <h1 class="text-3xl font-black text-panama-blue mb-6 flex items-center gap-2">
+        <span class="material-icons-round text-panama-gold">local_fire_department</span>
+        Subastas en Vivo
+    </h1>
+    
+    {% if ending_soon %}
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-panama-red mb-4">⏰ Finalizando pronto</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for auction in ending_soon %}
+            <a href="{{ url_for('auctions.detail', auction_id=auction.id) }}" class="bg-white p-4 rounded-xl shadow-md border-2 border-panama-gold hover:shadow-lg transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-bold text-panama-blue">{{ auction.listing.title[:40] }}...</h3>
+                        <p class="text-2xl font-black text-panama-gold">${{ auction.current_price }}</p>
+                    </div>
+                    <span class="bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">EN VIVO</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if auctions %}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {% for auction in auctions %}
+        <a href="{{ url_for('auctions.detail', auction_id=auction.id) }}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all">
+            <img src="{{ auction.listing.images[0].image_url if auction.listing.images else 'https://placehold.co/400x300' }}" class="w-full h-48 object-cover">
+            <div class="p-4">
+                <h3 class="font-bold text-panama-blue truncate">{{ auction.listing.title }}</h3>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-2xl font-black text-gray-900">${{ auction.current_price }}</span>
+                    <span class="text-xs text-gray-500">{{ auction.bids.count() }} pujas</span>
+                </div>
+                <div class="mt-2 text-xs text-panama-gold font-bold">
+                    Termina: {{ auction.end_time.strftime('%d/%m %H:%M') }}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <span class="material-icons-round text-6xl text-gray-300 mb-4">gavel</span>
+        <h2 class="text-xl font-bold text-gray-600">No hay subastas activas</h2>
+        <p class="text-gray-500 mt-2">Vuelve pronto o crea la tuya</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

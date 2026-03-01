@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Reportar Fraude{% endblock %}
+{% block content %}
+<div class="max-w-[800px] mx-auto px-4 py-10">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-panama-blue mb-4">🚨 Reportar Fraude o Actividad Sospechosa</h1>
+        <p class="text-gray-600">Si has sido víctima de fraude o has detectado actividad sospechosa, repórtalo inmediatamente.</p>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p class="text-sm text-red-800 font-bold flex items-center gap-2">
+                <span class="material-icons-round">warning</span>
+                En caso de emergencia o peligro inmediato, contacta a las autoridades locales (911).
+            </p>
+        </div>
+        
+        <form action="{{ url_for('reports.create') }}" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Tipo de Fraude</label>
+                <select name="report_type" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                    <option value="">Selecciona una opción...</option>
+                    <option value="FakePrice">Precio Falso / Engañoso</option>
+                    <option value="SuspiciousSeller">Vendedor Sospechoso</option>
+                    <option value="IllegalContent">Contenido Ilegal o Prohibido</option>
+                    <option value="Phishing">Intento de Phishing</option>
+                    <option value="PaymentFraud">Fraude de Pago</option>
+                    <option value="Other">Otro</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">ID del Anuncio (si aplica)</label>
+                <input type="text" name="listing_id" placeholder="Ej: 123" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Descripción Detallada</label>
+                <textarea name="details" rows="6" required placeholder="Describe lo sucedido con el mayor detalle posible..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Tu Correo (para seguimiento)</label>
+                <input type="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+            </div>
+            
+            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-lg font-bold transition-colors shadow-lg">
+                Enviar Reporte de Fraude
+            </button>
+        </form>
+    </div>
+    
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+        <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+            <span class="material-icons-round">info</span> ¿Qué pasa después?
+        </h3>
+        <ul class="space-y-2 text-sm text-blue-800">
+            <li>• Tu reporte será revisado por nuestro equipo de moderación en menos de 24 horas.</li>
+            <li>• Si el reporte es válido, tomaremos acción inmediata (eliminar anuncio, suspender usuario, etc.).</li>
+            <li>• Te notificaremos el resultado vía correo electrónico.</li>
+            <li>• Tu identidad será mantenida en confidencialidad.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

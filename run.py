@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from app import create_app, db, socketio
+from app import create_app
+from app.extensions import db, socketio
 from app.models import User, Listing, Category, Report, AIAnalysis
 import os
 
@@ -31,6 +32,7 @@ def init_db():
         )
         admin.set_password('admin123')
         db.session.add(admin)
+    
     db.session.commit()
     print('✅ Base de datos inicializada correctamente')
 
